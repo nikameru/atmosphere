@@ -6,6 +6,9 @@ npm-debug.log*
 # Secrets
 .env
 
+# Data
+data
+
 # Runtime data
 pids
 *.pid

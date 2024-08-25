@@ -1,8 +1,8 @@
-import express, { Request, Response, Router } from 'express';
-import 'dotenv/config';
+import express, { Request, Response, Router } from "express";
+import "dotenv/config";
 
-import { api } from './routes/Api';
-import * as db from './db/Database';
+import { api } from "./routes/Api";
+import * as db from "./database/Database";
 
 const server = express();
 const port = process.env.ATMOSPHERE_PORT || 80;
@@ -19,11 +19,10 @@ server.use(express.urlencoded({
     extended: true
 }));
 
-// Mount necessary routes
-server.use('/api', api);
+server.use("/api", api);
 
-server.get('/', (req: Request, res: Response) => {
-    res.send('Welcome to the atmosphere!');
+server.get("/", (req: Request, res: Response) => {
+    res.send("Welcome to the atmosphere!");
 });
 
 startServer();
