@@ -18,6 +18,7 @@ import * as Config from "../Config";
 import { Player } from "../structures/Player";
 import { PlayerPool } from "../objects/PlayerPool";
 import { Score } from "../structures/Score";
+import { ScoreStatus } from "../enums/ScoreStatus";
 
 const playerPool: PlayerPool = PlayerPool.getInstance();
 
@@ -96,13 +97,13 @@ api.post("/login.php", async (req: Request, res: Response) => {
     return res.send(getResult(
         ResultType.SUCCESS, 
         [
-            user.rows[0].id,
+            player._id,
             uuid,
-            stats.rows[0].rank,
-            stats.rows[0].rank,     // TODO: look into rank by
-            stats.rows[0].accuracy * 1000,
-            user.rows[0].username,
-            Config.GRAVATAR_ENDPOINT + user.rows[0].email_hash              
+            player.rank,
+            player.totalScore,
+            player.accuracy * 1000,
+            player.username,
+            Config.GRAVATAR_ENDPOINT + user.rows[0].email_hash             
         ]
     ));
 });
@@ -212,7 +213,8 @@ api.get("/upload/:replay", async (req: Request, res: Response) => {
 
 // Upload replay
 api.post("/upload.php", async (req: Request, res: Response) => {
-    
+    // TODO: Implement replay upload
+    return res.send(getResult(ResultType.SUCCESS, ["Replay uploaded."]));
 });
 
 // Submit score
@@ -227,21 +229,6 @@ api.post("/submit.php", async (req: Request, res: Response) => {
         return res.send(getResult(ResultType.FAIL, ["Not enough arguments."]));
     }
 
-    /*
-    // Check if the user exists
-    const user: QueryResult = await query(
-        `
-        SELECT *
-        FROM users
-        WHERE id = $1
-        `,
-        [data.userID]
-    );
-    if (user.rows.length < 1) {
-        return res.send(getResult(ResultType.FAIL, ["Cannot find user."]));
-    }
-    */
-
     const player = playerPool.getPlayer(parseInt(data.userID));
     if (player === undefined) {
         return res.send(getResult(ResultType.FAIL, ["Cannot find player."]));
@@ -254,12 +241,136 @@ api.post("/submit.php", async (req: Request, res: Response) => {
         }
 
         player.playing = data.hash;
+        // TODO: Should "playID" always equal to 1?
         return res.send(getResult(ResultType.SUCCESS, [1, player._id]));
     }
 
     // Perform regular score submission otherwise
-    const score: Score = await Score.fromSubmission(data);
+    var score: Score;
+    try {
+        score = await Score.fromSubmission(data);
+
+        // If new best, update the previous best score and add score points
+        if (score.status === ScoreStatus.BEST) {
+            await query(
+                `
+                UPDATE scores
+                SET status = $1
+                WHERE beatmap_hash = $2 AND status = $3 AND player_id = $4
+                `,
+                [
+                    ScoreStatus.SUBMITTED,
+                    score._beatmapHash,
+                    ScoreStatus.BEST,
+                    score._player?._id
+                ]
+            );
+
+            // Add score points to the player statistics
+            var diff: number = score._score;
+            // If there was a previous best score, subtract it from the reward
+            if (score.previousBest) {
+                diff -= score.previousBest._score;
+            }
+            // TODO: check if the beatmap should give ranked score, etc.
+            player.totalScore += diff;
+            player.rankedScore += diff;
+        }
+
+        // Update other player statistics
+        player.playing = "";
+        player.playcount++;
+
+        // Insert the score after dealing with the previous best (if present)
+        const insertedScore: QueryResult = await query(
+            `
+            INSERT INTO scores
+            (
+                player_id,
+                beatmap_hash,
+                timestamp,
+                device_id,
+                rank,
+                mods,
+                score,
+                max_combo,
+                full_combo,
+                grade,
+                accuracy,
+                hit300,
+                hit_geki,
+                hit100,
+                hit_katsu,
+                hit50,
+                hit_miss,
+                status
+            )
+            VALUES (
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+                $11, $12, $13, $14, $15, $16, $17, $18
+            )
+            RETURNING id
+            `,
+            [
+                score._player?._id,
+                score._beatmapHash,
+                score._timestamp,
+                score._deviceId,
+                score.rank,
+                score._mods,
+                score._score,
+                score._maxCombo,
+                score._fullCombo,
+                score._grade,
+                score._accuracy,
+                score._hit300,
+                score._hitGeki,
+                score._hit100,
+                score._hitKatsu,
+                score._hit50,
+                score._hitMiss,
+                score.status
+            ]
+        );
+        score.id = insertedScore.rows[0].id;
+
+        // Insert new score values and playcount into the database
+        await query(
+            `
+            UPDATE stats
+            SET total_score = $1,
+                ranked_score = $2,
+                playcount = $3
+            WHERE id = $4
+            `,
+            [
+                player.totalScore,
+                player.rankedScore,
+                player.playcount,
+                player._id
+            ]
+        );
+        // Update rank and accuracy (database update is done in the method)
+        // TODO: I should probably merge these two operation into one method
+        await player.updateRankAndAccuracy();
+    } catch (err) {
+        console.log("ERROR while submitting score: " + err + "\n");
+        return res.send(
+            getResult(ResultType.FAIL, ["Score submission failed."])
+        );
+    }
     console.log(score);
 
-    console.log("Enough for today.");
+    return res.send(getResult(
+        ResultType.SUCCESS,
+        [
+            player.rank,
+            // TODO: Handle this properly maybe, e.g. enum or something
+            player.rankedScore,
+            player.accuracy * 1000,
+            score.rank,
+            // If the score is best, request replay upload
+            score.status === ScoreStatus.BEST ? score.id : ""
+        ]
+    ));
 });

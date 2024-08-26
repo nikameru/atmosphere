@@ -7,19 +7,25 @@ import { PlayerPool } from "../objects/PlayerPool";
 
 export class Score {
     // Score data
-    public readonly _id: number;
-    public readonly _beatmapHash: string;       // +Beatmap object?
-    public readonly _player: Player;
+    public id: number;
+
+    // TODO: Beatmap class?
+    public readonly _beatmapHash: string;
+    public readonly _player: Player | null;
     public readonly _timestamp: number;
     public readonly _deviceId: string;
 
     // Score statistics
-    public readonly _rank: string;
-    public readonly _mods: string;              // Mod[]?
-    public readonly _score: number;             // TODO: +pp?
+    public rank: number;
+
+    // TODO: Mod[]?
+    public readonly _mods: string;
+    // TODO: DPP?
+    public readonly _score: number;
     public readonly _maxCombo: number;
     public readonly _fullCombo: boolean;
-    public readonly _grade: string;             // Grade enum?
+    // TODO: Grade enum?
+    public readonly _grade: string;
     public readonly _accuracy: number;
 
     // Score hit statistics
@@ -31,52 +37,57 @@ export class Score {
     public readonly _hitMiss: number;
     
     // Score status
-    public readonly _status: ScoreStatus;
-    public readonly _previousBest: Score | null;
+    public status: ScoreStatus;
+    public previousBest: Score | null;
 
     public constructor(
-        _beatmapHash: string,
-        _player: Player,
-        _timestamp: number,
-        _mods: string,
-        _score: number,
-        _maxCombo: number,
-        _fullCombo: boolean,
-        _grade: string,
-        _accuracy: number,
-        _hit300: number,
-        _hitGeki: number,
-        _hit100: number,
-        _hitKatsu: number,
-        _hit50: number,
-        _hitMiss: number,
-        _status: ScoreStatus,
-        _id?: number,
-        _deviceId?: string,
-        _rank?: string,
-        _previousBest?: Score,
+        id?: number,
+        beatmapHash?: string,
+        player?: Player,
+        timestamp?: number,
+        deviceId?: string,
+        rank?: number,
+        mods?: string,
+        score?: number,
+        maxCombo?: number,
+        fullCombo?: boolean,
+        grade?: string,
+        accuracy?: number,
+        hit300?: number,
+        hitGeki?: number,
+        hit100?: number,
+        hitKatsu?: number,
+        hit50?: number,
+        hitMiss?: number,
+        status?: ScoreStatus,
+        previousBest?: Score,
     
     ) {
-        this._id = _id ?? 0;
-        this._beatmapHash = _beatmapHash;
-        this._player = _player;
-        this._timestamp = _timestamp;
-        this._deviceId = _deviceId ?? "";
-        this._rank = _rank ?? "";
-        this._mods = _mods;
-        this._score = _score;
-        this._maxCombo = _maxCombo;
-        this._fullCombo = _fullCombo;
-        this._grade = _grade;
-        this._accuracy = _accuracy;
-        this._hit300 = _hit300;
-        this._hitGeki = _hitGeki;
-        this._hit100 = _hit100;
-        this._hitKatsu = _hitKatsu;
-        this._hit50 = _hit50;
-        this._hitMiss = _hitMiss;
-        this._status = _status;
-        this._previousBest = _previousBest ?? null;
+        this.id = id ?? 0;
+
+        this._beatmapHash = beatmapHash ?? "";
+        this._player = player ?? null;
+        this._timestamp = timestamp ?? 0;
+        this._deviceId = deviceId ?? "";
+
+        this.rank = rank ?? 0;
+
+        this._mods = mods ?? "";
+        this._score = score ?? 0;
+        this._maxCombo = maxCombo ?? 0;
+        this._fullCombo = fullCombo ?? false;
+        this._grade = grade ?? "";
+        this._accuracy = accuracy ?? 0;
+
+        this._hit300 = hit300 ?? 0;
+        this._hitGeki = hitGeki ?? 0;
+        this._hit100 = hit100 ?? 0;
+        this._hitKatsu = hitKatsu ?? 0;
+        this._hit50 = hit50 ?? 0;
+        this._hitMiss = hitMiss ?? 0;
+
+        this.status = status ?? ScoreStatus.NONE;
+        this.previousBest = previousBest ?? null;
     }
 
     public static async fromDatabase(id: number): Promise<Score> {
@@ -93,15 +104,18 @@ export class Score {
         }
 
         const player: Player | undefined = PlayerPool.getInstance()
-            .getPlayer(score.rows[0].playerID);
+            .getPlayer(score.rows[0].player_id);
         if (player === undefined) {
             throw new Error("Cannot find player.");
         }
 
         return new Score(
+            score.rows[0].id,
             score.rows[0].beatmap_hash,
             player,
             score.rows[0].timestamp,
+            score.rows[0].device_id,
+            score.rows[0].rank,
             score.rows[0].mods,
             score.rows[0].score,
             score.rows[0].max_combo,
@@ -115,9 +129,6 @@ export class Score {
             score.rows[0].hit50,
             score.rows[0].hit_miss,
             score.rows[0].status,
-            score.rows[0].id,
-            score.rows[0].device_id,
-            score.rows[0].rank,
             score.rows[0].previous_best
         );  
     }
@@ -131,16 +142,13 @@ export class Score {
             throw new Error("Cannot find player.");
         }
 
-        const status: ScoreStatus = await Score.determineStatus(
-            player,
-            submission.beatmapHash,
-            parseInt(data[1])
-        );
-
-        return new Score(
+        const score: Score = new Score(
+            undefined,
             player.playing,
             player,
             Math.round(parseInt(data[11]) / 1000),
+            undefined,
+            undefined,
             data[0],
             parseInt(data[1]),
             parseInt(data[2]),
@@ -153,30 +161,52 @@ export class Score {
             parseInt(data[6]),
             parseInt(data[8]),
             parseInt(data[9]),
-            status
+            undefined,
+            undefined
         );
+        await score.determineStatus();
+        await score.calculateRank();
+
+        return score;
     }
 
-    public static async determineStatus(
-        player: Player,
-        beatmapHash: string,
-        score: number
-    ): Promise<ScoreStatus> {
-        const scores: QueryResult = await query(
+    private async determineStatus() {
+        const prevScores: QueryResult = await query(
             `
-            SELECT *
+            SELECT id, score
             FROM scores
             WHERE player_id = $1 AND beatmap_hash = $2
             ORDER BY score DESC
             `,
-            [player._id, beatmapHash]
+            [this._player?._id, this._player?.playing]
         );
-
-        // If the score is first or better than the current best, it is the best one
-        if (scores.rows.length < 1 || score > scores.rows[0].score) {
-            return ScoreStatus.BEST;
+        console.log(prevScores.rows);
+    
+        // If the score is first on the beatmap, it is the best one
+        if (prevScores.rows.length < 1) {
+            this.status = ScoreStatus.BEST;
+        } else if (this._score > prevScores.rows[0].score) {
+            // Set the previous best score in case there was one
+            this.previousBest = await Score.fromDatabase(prevScores.rows[0].id);
+            this.status = ScoreStatus.BEST;
         } else { 
-            return ScoreStatus.SUBMITTED;
+            this.status = ScoreStatus.SUBMITTED;
         }
+    }
+
+    private async calculateRank() {
+        // Find out amount of players with a higher score on the same beatmap
+        const playersAbove: QueryResult = await query(
+            `
+            SELECT COUNT(*)
+            AS amount
+            FROM scores
+            WHERE beatmap_hash = $1 AND score > $2 AND status = $3
+            `,
+            [this._beatmapHash, this._score, ScoreStatus.BEST]
+        );
+        
+        // Update beatmap rank, don't forget to add 1 to the amount of players
+        this.rank = parseInt(playersAbove.rows[0].amount) + 1;
     }
 }

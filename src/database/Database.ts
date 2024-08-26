@@ -45,7 +45,7 @@ async function initialize() {
             score INTEGER NOT NULL,
             max_combo INTEGER NOT NULL,
             full_combo BOOLEAN NOT NULL,
-            rank TEXT NOT NULL,
+            rank INTEGER NOT NULL,
             accuracy REAL NOT NULL,
             grade TEXT NOT NULL,
             hit300 INTEGER NOT NULL,

@@ -1,5 +1,6 @@
 export enum ScoreStatus {
-    FAILED,
-    SUBMITTED,
-    BEST
+    NONE = 0,
+    FAILED = 1,
+    SUBMITTED = 2,
+    BEST = 3
 }

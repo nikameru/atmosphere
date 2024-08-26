@@ -1,4 +1,4 @@
 export enum AccountStatus {
-    UNRESTRICTED,
-    RESTRICTED
+    UNRESTRICTED = 0,
+    RESTRICTED = 1
 }
