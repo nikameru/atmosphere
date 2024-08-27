@@ -5,8 +5,7 @@ import { ResultType } from "../enums/ResultType";
 export function logRequests(req: Request, res: Response, next: any) {
     console.log(
         `[${new Date().toLocaleString()}] ${req.method} => ${req.originalUrl}\n` +
-        `DATA: ${JSON.stringify(req.body)}\n` +
-        `PARAMS: ${JSON.stringify(req.params)}\n`
+        `DATA: ${JSON.stringify(req.body)}\n`
     );
 
     next();
