@@ -1,4 +1,4 @@
-import pg from "pg";
+import pg, { QueryResult } from "pg";
 
 const { Pool } = pg;
 
@@ -9,7 +9,7 @@ const pool = new Pool({
     database: "atmospheredb"
 });
 
-async function initialize() {
+export async function initialize(): Promise<void> {
     // Create necessary tables if they aren"t present
     await query(
         `
@@ -36,26 +36,26 @@ async function initialize() {
 
         CREATE TABLE IF NOT EXISTS scores (
             id SERIAL PRIMARY KEY,
-            status INTEGER,
+            status INTEGER NOT NULL,
             beatmap_id INTEGER,
             beatmap_hash TEXT NOT NULL,
             player_id INTEGER NOT NULL,
-            timestamp INTEGER NOT NULL,
+            timestamp INTEGER,
             device_id TEXT,
-            score INTEGER NOT NULL,
-            max_combo INTEGER NOT NULL,
-            full_combo BOOLEAN NOT NULL,
-            rank INTEGER NOT NULL,
-            accuracy REAL NOT NULL,
-            grade TEXT NOT NULL,
-            hit300 INTEGER NOT NULL,
-            hit_geki INTEGER NOT NULL,
-            hit100 INTEGER NOT NULL,
-            hit_katsu INTEGER NOT NULL,
-            hit50 INTEGER NOT NULL,
-            hit_miss INTEGER NOT NULL,
+            score INTEGER,
+            pp REAL DEFAULT 0,
+            max_combo INTEGER,
+            full_combo BOOLEAN,
             mods TEXT,
-            pp REAL DEFAULT 0
+            rank INTEGER,
+            accuracy REAL,
+            grade TEXT,
+            hit300 INTEGER,
+            hit_geki INTEGER,
+            hit100 INTEGER,
+            hit_katsu INTEGER,
+            hit50 INTEGER,
+            hit_miss INTEGER
         );
 
         CREATE TABLE IF NOT EXISTS stats (
@@ -88,12 +88,13 @@ async function initialize() {
     );
 } 
 
-async function query(text: string, params?: any[]) {
+export async function query(
+    text: string,
+    params?: any[]
+): Promise<QueryResult> {
     return await pool.query(text, params);
 }
 
 process.on("exit", async () => {
     await pool.end();
 });
-
-export { query, initialize };

@@ -12,7 +12,7 @@ export function logRequests(req: Request, res: Response, next: any) {
 }
 
 export function validateParams(
-    data: Record<string, string>,
+    data: Record<string, any>,
     requiredParams: string[]
 ): boolean {
     return requiredParams.every(param => data[param]) ? true : false;

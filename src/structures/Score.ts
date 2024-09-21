@@ -3,7 +3,7 @@ import { QueryResult } from "pg";
 import { query } from "../database/Database";
 import { Player } from "./Player";
 import { ScoreStatus } from "../enums/ScoreStatus";
-import { PlayerPool } from "../objects/PlayerPool";
+import { PlayerPool } from "../global/PlayerPool";
 
 export class Score {
     // Score data
@@ -164,13 +164,13 @@ export class Score {
             undefined,
             undefined
         );
-        await score.determineStatus();
+        await score.assignStatus();
         await score.calculateRank();
 
         return score;
     }
 
-    private async determineStatus() {
+    private async assignStatus() {
         const prevScores: QueryResult = await query(
             `
             SELECT id, score
