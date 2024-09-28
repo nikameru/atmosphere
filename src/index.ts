@@ -1,5 +1,5 @@
 import * as http from "node:http";
-import express, { Request, Response, Router } from "express";
+import express, { Request, Response } from "express";
 import { Server } from "socket.io";
 
 import "dotenv/config";
@@ -7,17 +7,20 @@ import "dotenv/config";
 import * as Config from "./global/Config";
 import { api } from "./handlers/api/Api";
 import * as db from "./database/Database";
-import { RoomServerClientEvents } from "./handlers/api/IRoomEvents";
 import { onRoomConnection } from "./handlers/api/RoomApi";
-import { Player } from "./structures/Player";
-import { Room } from "./structures/Room";
+import { RoomServerClientEvents, RoomClientServerEvents } from "./handlers/api/events/IRoomEvents";
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server/*<RoomServerClientEvents>*/(server);
+const io = new Server<
+    RoomClientServerEvents,
+    RoomServerClientEvents
+>(server);
 const port: string | number = process.env.ATMOSPHERE_PORT || Config.DEFAULT_PORT;
 
-async function startServer() {
+export { io };
+
+async function bootstrap() {
     await db.initialize();
 
     server.listen(port, () => {
@@ -29,12 +32,13 @@ app.use(express.urlencoded({
     extended: true
 }));
 app.use(express.json());
+// Mount request routes
 app.use("/api", api);
-
 app.get("/", (req: Request, res: Response) => {
     res.send("Welcome to the atmosphere!");
 });
 
+// Listen to socket connections with dynamic namespaces (multiplayer)
 io.of(/^\/multi\/\d+$/).on("connection", onRoomConnection);
-    
-startServer();
+
+bootstrap();

@@ -21,7 +21,7 @@ export async function submitScore(req: Request, res: Response) {
         return res.send(getResult(ResultType.FAIL, ["Not enough arguments."]));
     }
 
-    const player = playerPool.getPlayer(parseInt(data.userID));
+    const player = playerPool.getPlayer(Number(data.userID));
     if (player === undefined) {
         return res.send(getResult(ResultType.FAIL, ["Cannot find player."]));
     }
@@ -149,8 +149,7 @@ export async function submitScore(req: Request, res: Response) {
                 player._id
             ]
         );
-        // Update rank and accuracy (database update is done in the method)
-        // TODO: I should probably merge these two operation into one method
+
         await player.updateRankAndAccuracy();
     } catch (err) {
         console.log("ERROR while submitting score: " + err + "\n");

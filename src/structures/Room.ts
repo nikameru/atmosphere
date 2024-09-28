@@ -8,13 +8,14 @@ import { RoomPlayer } from "./RoomPlayer";
 const roomPool: RoomPool = RoomPool.getInstance();
 
 export class Room {
+    
     public readonly _id: number;
     public name: string;
     public host: RoomPlayer;
     public password: string | null;
     public isLocked: boolean;
     public maxPlayers: number;
-    public players: RoomPlayer[];
+    public players: Map<string, RoomPlayer>;
     public beatmap: Record<string, string | null> | null;
     public mods: Record<string, any>;
     public gameplaySettings: Record<string, any>;
@@ -27,7 +28,7 @@ export class Room {
         host: RoomPlayer,
         maxPlayers: number,
         beatmap?: Record<string, string | null>,
-        players?: RoomPlayer[],
+        players?: Map<string, RoomPlayer>,
         mods?: Record<string, any>,
         password?: string,
         isLocked?: boolean,
@@ -51,21 +52,22 @@ export class Room {
             beatmapSetId: beatmap.beatmapSetId ? beatmap.beatmapSetId : null
         } : null;
 
-        this.password = password || null;
-        this.isLocked = isLocked || this.password ? true : false;
-        this.players = players || [new RoomPlayer(this.host._id, this.host._username)];
-        this.gameplaySettings = gameplaySettings || {
+        this.password = password ?? null;
+        this.isLocked = isLocked ?? this.password ? true : false;
+        this.players = players ?? new Map<string, RoomPlayer>();
+        this.gameplaySettings = gameplaySettings ?? {
             isRemoveSliderLock: false,
             isFreeMod: true,
             allowForceDifficultyStatistics: false
         };
-        this.teamMode = teamMode || TeamMode.HEAD_TO_HEAD;
-        this.winCondition = winCondition || WinCondition.SCORE_V1;
-        this.mods = mods || {
+        this.teamMode = teamMode ?? TeamMode.HEAD_TO_HEAD;
+        this.winCondition = winCondition ?? WinCondition.SCORE_V1;
+        this.mods = mods ?? {
             mods: "",
             speedMultiplier: 1.0,
             flFollowDelay: 1.12
         };
-        this.status = status || RoomStatus.IDLE;
+        this.status = status ?? RoomStatus.IDLE;
     }
+
 }

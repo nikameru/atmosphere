@@ -19,7 +19,7 @@ export async function login(req: Request, res: Response) {
     }
 
     // Check whether the client is up-to-date
-    if (parseInt(data.version) < Config.ONLINE_VERSION) {
+    if (Number(data.version) < Config.ONLINE_VERSION) {
         return res.send(
             getResult(ResultType.FAIL, ["Update the game to use online features."])
         );

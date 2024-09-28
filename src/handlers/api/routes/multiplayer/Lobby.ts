@@ -5,9 +5,6 @@ import { validateParams, getResult } from "../../../../utils/NetworkUtils";
 import { RoomPool } from "../../../../global/RoomPool";
 import { Room } from "../../../../structures/Room";
 import { RoomStatus } from "../../../../enums/RoomStatus";
-import { Player } from "../../../../structures/Player";
-import { WinCondition } from "../../../../enums/WinCondition";
-import { TeamMode } from "../../../../enums/TeamMode";
 import { RoomPlayer } from "../../../../structures/RoomPlayer";
 
 const roomPool: RoomPool = RoomPool.getInstance();
@@ -19,20 +16,6 @@ export async function getRooms(req: Request, res: Response) {
     const rooms: Record<string, any>[] = [];
 
     for (const room of roomPool.getRooms().values()) {
-        const playerNames: string[] = [];
-        const roomPlayers: Record<string, any>[] = [];
-
-        room.players.forEach(player => {
-            playerNames.push(player._username);
-            roomPlayers.push({
-                uid: player._id,
-                username: player._username,
-                status: player.status,
-                team: player.team,
-                mods: player.mods
-            });
-        });
-
         rooms.push({
             id: room._id,
             name: room.name,
@@ -43,14 +26,23 @@ export async function getRooms(req: Request, res: Response) {
             gameplaySettings: room.gameplaySettings,
             teamMode: room.teamMode,
             winCondition: room.winCondition,
-            players: roomPlayers,
-            playerCount: room.players.length,
-            playerNames: playerNames.join(", "),
+            players: Array(...room.players.values()).map(player => {
+                return {
+                    uid: player._id,
+                    username: player._username,
+                    status: player.status,
+                    team: player.team,
+                    mods: player.mods
+                };
+            }),
+            playerCount: room.players.size,
+            playerNames: Array(...room.players.values())
+                .map(player => player._username)
+                .join(", "),
             status: room.status
         });
     }
 
-    console.log(rooms);
     return res.send(rooms);
 }
 
@@ -86,14 +78,13 @@ export async function createRoom(req: Request, res: Response) {
         new RoomPlayer(data.host.uid, data.host.username),
         data.maxPlayers,
         data.beatmap,
-        [new RoomPlayer(data.host.uid, data.host.username)],
+        new Map<string, RoomPlayer>(),
         data.mods,
-        data.password || null,
+        data.password ?? null,
         data.password ? true : false,
         data.gameplaySettings,
         data.teamMode,
-        data.winCondition,
-        RoomStatus.IDLE
+        data.winCondition
     );
     roomPool.add(room);
 

@@ -6,6 +6,7 @@ import { ScoreStatus } from "../enums/ScoreStatus";
 import { PlayerPool } from "../global/PlayerPool";
 
 export class Score {
+
     // Score data
     public id: number;
 
@@ -63,7 +64,7 @@ export class Score {
         previousBest?: Score,
     
     ) {
-        this.id = id ?? 0;
+        this.id = id ?? -1;
 
         this._beatmapHash = beatmapHash ?? "";
         this._player = player ?? null;
@@ -137,7 +138,7 @@ export class Score {
         const data: string[] = submission.data.split(" ");
 
         const player: Player | undefined = PlayerPool.getInstance()
-            .getPlayer(parseInt(submission.userID));
+            .getPlayer(Number(submission.userID));
         if (player === undefined) {
             throw new Error("Cannot find player.");
         }
@@ -146,21 +147,21 @@ export class Score {
             undefined,
             player.playing,
             player,
-            Math.round(parseInt(data[11]) / 1000),
+            Math.round(Number(data[11]) / 1000),
             undefined,
             undefined,
             data[0],
-            parseInt(data[1]),
-            parseInt(data[2]),
+            Number(data[1]),
+            Number(data[2]),
             data[12] === "1",
             data[3],
-            parseInt(data[10]) / 1000,
-            parseInt(data[5]),
-            parseInt(data[4]),
-            parseInt(data[7]),
-            parseInt(data[6]),
-            parseInt(data[8]),
-            parseInt(data[9]),
+            Number(data[10]) / 1000,
+            Number(data[5]),
+            Number(data[4]),
+            Number(data[7]),
+            Number(data[6]),
+            Number(data[8]),
+            Number(data[9]),
             undefined,
             undefined
         );
@@ -207,6 +208,7 @@ export class Score {
         );
         
         // Update beatmap rank, don't forget to add 1 to the amount of players
-        this.rank = parseInt(playersAbove.rows[0].amount) + 1;
+        this.rank = Number(playersAbove.rows[0].amount) + 1;
     }
+
 }

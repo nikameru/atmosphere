@@ -62,7 +62,7 @@ export async function getScore(req: Request, res: Response) {
 
     var score: Score;
     try {
-        score = await Score.fromDatabase(parseInt(data.playID));
+        score = await Score.fromDatabase(Number(data.playID));
     } catch (err) {
         return res.send(getResult(ResultType.FAIL, ["Cannot find score."]));
     }

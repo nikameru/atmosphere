@@ -4,6 +4,7 @@ import { query } from "../database/Database";
 import { ScoreStatus } from "../enums/ScoreStatus";
 
 export class Player {
+
     public readonly _id: number;
     public readonly _uuid: string;
     public username: string;
@@ -73,7 +74,7 @@ export class Player {
             [this.rankedScore]
         );
         // Update rank, don't forget to add 1 to the amount of players
-        this.rank = parseInt(playersAbove.rows[0].amount) + 1;
+        this.rank = Number(playersAbove.rows[0].amount) + 1;
 
         // Recalculate accuracy
         const scores: QueryResult = await query(
@@ -103,4 +104,5 @@ export class Player {
             [this.rank, this.accuracy, this._id]
         );
     }
+
 }
