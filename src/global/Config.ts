@@ -8,6 +8,8 @@ export const MULTIPLAYER_VERSION: number = 7;
 
 export const MULTIPLAYER_PATH: string = "/multi";
 
-export const DATA_PATH: string = resolve(__dirname, "../data");
+export const MULTIPLAYER_NAMESPACE: RegExp = /^\/multi\/\d+$/;
+
+export const DATA_PATH: string = resolve(__dirname, "../../data");
 
 export const GRAVATAR_ENDPOINT: string = "https://s.gravatar.com/avatar/";

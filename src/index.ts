@@ -1,14 +1,17 @@
 import * as http from "node:http";
 import express, { Request, Response } from "express";
-import { Server } from "socket.io";
+import { Server, Socket } from "socket.io";
 
 import "dotenv/config";
 
 import * as Config from "./global/Config";
-import { api } from "./handlers/api/Api";
+import { api } from "./api/Api";
 import * as db from "./database/Database";
-import { onRoomConnection } from "./handlers/api/RoomApi";
-import { RoomServerClientEvents, RoomClientServerEvents } from "./handlers/api/events/IRoomEvents";
+import { 
+    RoomServerClientEvents,
+    RoomClientServerEvents
+} from "./api/handlers/events/IRoomEvents";
+import { onRoomConnection } from "./api/RoomApi";
 
 const app = express();
 const server = http.createServer(app);
@@ -18,6 +21,7 @@ const io = new Server<
 >(server);
 const port: string | number = process.env.ATMOSPHERE_PORT || Config.DEFAULT_PORT;
 
+// To broadcast events to certain rooms
 export { io };
 
 async function bootstrap() {
@@ -28,6 +32,7 @@ async function bootstrap() {
     });
 }
 
+// Necessary middlewares for express
 app.use(express.urlencoded({
     extended: true
 }));
@@ -39,6 +44,8 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 // Listen to socket connections with dynamic namespaces (multiplayer)
-io.of(/^\/multi\/\d+$/).on("connection", onRoomConnection);
+io.of(Config.MULTIPLAYER_NAMESPACE).on("connection", (socket: Socket) => {
+    onRoomConnection(socket);
+});
 
 bootstrap();

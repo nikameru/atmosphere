@@ -1,17 +1,18 @@
 import Router from "express-promise-router";
 import multer from "multer";
 
-import * as Config from "../../global/Config";
-import { logRequests } from "../../utils/NetworkUtils";
-import { login } from "./routes/account/Login";
-import { register } from "./routes/account/Register";
-import { getLeaderboard, getScore } from "./routes/ranking/Leaderboard";
-import { downloadReplay, uploadReplay } from "./routes/ranking/Replay";
-import { submitScore } from "./routes/ranking/Submit";
-import { getRooms, createRoom } from "./routes/multiplayer/Lobby";
+import * as Config from "../global/Config";
+import { logRequests } from "../utils/RequestUtils";
+import { login } from "./handlers/routes/account/Login";
+import { register } from "./handlers/routes/account/Register";
+import { getLeaderboard, getScore } from "./handlers/routes/ranking/Leaderboard";
+import { downloadReplay, uploadReplay } from "./handlers/routes/ranking/Replay";
+import { submitScore } from "./handlers/routes/ranking/Submit";
+import { getRooms, createRoom } from "./handlers/routes/multiplayer/Lobby";
 
 export const api = Router();
 
+// TODO: Fix replays
 const replayStorage = multer.diskStorage({
     destination: Config.DATA_PATH + "/replays",
     filename: function (req, file, cb) {

@@ -1,6 +1,6 @@
 import { Response, Request } from "express";
 import { ResultType } from "../../../../enums/ResultType";
-import { validateParams, getResult } from "../../../../utils/NetworkUtils";
+import { validateParams, getResult } from "../../../../utils/RequestUtils";
 
 import { RoomPool } from "../../../../global/RoomPool";
 import { Room } from "../../../../structures/Room";

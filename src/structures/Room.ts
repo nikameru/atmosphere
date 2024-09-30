@@ -23,6 +23,9 @@ export class Room {
     public winCondition: WinCondition;
     public status: RoomStatus;
 
+    // Used to determine when all clients have loaded the beatmap
+    private _playersLoaded: RoomPlayer[] = [];
+
     public constructor(
         name: string,
         host: RoomPlayer,
@@ -68,6 +71,18 @@ export class Room {
             flFollowDelay: 1.12
         };
         this.status = status ?? RoomStatus.IDLE;
+    }
+
+    public addLoadedPlayer(player: RoomPlayer): void {
+        this._playersLoaded.push(player);
+    }
+
+    public hasEveryoneLoaded(): boolean {
+        return this._playersLoaded.length === this.players.size;
+    }
+
+    public destroy(): void {
+        roomPool.delete(this._id);
     }
 
 }

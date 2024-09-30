@@ -1,7 +1,7 @@
 import { Response, Request } from "express";
 import { QueryResult } from "pg";
 import { ResultType } from "../../../../enums/ResultType";
-import { validateParams, getResult } from "../../../../utils/NetworkUtils";
+import { validateParams, getResult } from "../../../../utils/RequestUtils";
 import { query } from "../../../../database/Database";
 
 import { PlayerPool } from "../../../../global/PlayerPool";

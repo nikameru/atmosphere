@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import { Response, Request } from "express";
 import { ResultType } from "../../../../enums/ResultType";
-import { getResult } from "../../../../utils/NetworkUtils";
+import { getResult } from "../../../../utils/RequestUtils";
 import * as Config from "../../../../global/Config";
 
 // Download replay
