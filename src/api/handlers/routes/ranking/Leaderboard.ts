@@ -1,7 +1,7 @@
 import { Response, Request } from "express";
 import { QueryResult } from "pg";
 import { ResultType } from "../../../../enums/ResultType";
-import { validateParams, getResult } from "../../../../utils/RequestUtils";
+import { RequestUtils } from "../../../../utils/RequestUtils";
 import { query } from "../../../../database/Database";
 
 import { PlayerPool } from "../../../../global/PlayerPool";
@@ -15,8 +15,11 @@ export async function getLeaderboard(req: Request, res: Response) {
     const data: Record<string, string> = req.body;
 
     // Ensure that all required parameters are present in the request
-    if (!validateParams(data, ["hash"])) {
-        return res.send(getResult(ResultType.FAIL, ["Not enough arguments."]));
+    if (!RequestUtils.validateParams(data, ["hash"])) {
+        return res.send(RequestUtils.createResult(
+            ResultType.FAIL,
+            ["Not enough arguments."]
+        ));
     }
 
     const scores: QueryResult = await query(
@@ -45,7 +48,7 @@ export async function getLeaderboard(req: Request, res: Response) {
         ].join(" ")
     );
 
-    return res.send(getResult(
+    return res.send(RequestUtils.createResult(
         ResultType.SUCCESS,
         [leaderboardData.join("\n")]
     ));
@@ -56,18 +59,24 @@ export async function getScore(req: Request, res: Response) {
     const data: Record<string, string> = req.body;
 
     // Ensure that all required parameters are present in the request
-    if (!validateParams(data, ["playID"])) {
-        return res.send(getResult(ResultType.FAIL, ["Not enough arguments."]));
+    if (!RequestUtils.validateParams(data, ["playID"])) {
+        return res.send(RequestUtils.createResult(
+            ResultType.FAIL,
+            ["Not enough arguments."]
+        ));
     }
 
     var score: Score;
     try {
         score = await Score.fromDatabase(Number(data.playID));
     } catch (err) {
-        return res.send(getResult(ResultType.FAIL, ["Cannot find score."]));
+        return res.send(RequestUtils.createResult(
+            ResultType.FAIL,
+            ["Cannot find score."]
+        ));
     }
 
-    return res.send(getResult(
+    return res.send(RequestUtils.createResult(
         ResultType.SUCCESS,
         [
             score._mods,

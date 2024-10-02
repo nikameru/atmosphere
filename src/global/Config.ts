@@ -13,3 +13,5 @@ export const MULTIPLAYER_NAMESPACE: RegExp = /^\/multi\/\d+$/;
 export const DATA_PATH: string = resolve(__dirname, "../../data");
 
 export const GRAVATAR_ENDPOINT: string = "https://s.gravatar.com/avatar/";
+
+export const OSU_DIRECT_ENDPOINT: string = "https://osu.direct/api/v2/";

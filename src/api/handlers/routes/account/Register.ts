@@ -1,9 +1,9 @@
 import { Response, Request } from "express";
 import { QueryResult } from "pg";
 import { ResultType } from "../../../../enums/ResultType";
-import { validateParams, getResult } from "../../../../utils/RequestUtils";
+import { RequestUtils } from "../../../../utils/RequestUtils";
 import { query } from "../../../../database/Database";
-import { hashPassword, createMd5 } from "../../../../utils/SecurityUtils";
+import { SecurityUtils } from "../../../../utils/SecurityUtils";
 
 import { AccountStatus } from "../../../../enums/AccountStatus";
 
@@ -11,11 +11,13 @@ export async function register(req: Request, res: Response) {
     const data: Record<string, string> = req.body;
 
     // Ensure that all required parameters are present in the request
-    if (!validateParams(
+    if (!RequestUtils.validateParams(
         data,
         ["username", "password", "deviceID", "email", "sign"]
     )) {
-        return res.send(getResult(ResultType.FAIL, ["Not enough arguments."]));
+        return res.send(RequestUtils.createResult(
+            ResultType.FAIL, ["Not enough arguments."]
+        ));
     }
 
     // Check if the user already exists
@@ -28,17 +30,19 @@ export async function register(req: Request, res: Response) {
         [data.username]
     );
     if (user.rows.length > 0) {
-        return res.send(getResult(ResultType.FAIL, ["Username is already taken."]));
+        return res.send(RequestUtils.createResult(
+            ResultType.FAIL, ["Username is already taken."]
+        ));
     }
 
     // Username length checks (must be from 2 to 16 characters in length)
     if (data.username.length < 2) {
-        return res.send(getResult(
+        return res.send(RequestUtils.createResult(
             ResultType.FAIL,
             ["Username cannot be shorter than 2 characters."]
         ));
     } else if (data.username.length > 16) {
-        return res.send(getResult(
+        return res.send(RequestUtils.createResult(
             ResultType.FAIL,
             ["Username cannot be longer than 16 characters."]
         ));
@@ -69,13 +73,13 @@ export async function register(req: Request, res: Response) {
         null,
         data.username,
         data.username.toLowerCase().replace(" ", "_"),
-        hashPassword(data.password),
+        SecurityUtils.hashPassword(data.password),
         data.deviceID,
         data.sign,
         null,
         null,
         data.email,
-        createMd5(data.email),
+        SecurityUtils.createMd5(data.email),
         AccountStatus.UNRESTRICTED,
         Math.round(Date.now() / 1000),
         null
@@ -92,5 +96,8 @@ export async function register(req: Request, res: Response) {
         [playerId]
     );
 
-    return res.send(getResult(ResultType.SUCCESS, ["Account created."]));
+    return res.send(RequestUtils.createResult(
+        ResultType.SUCCESS,
+        ["Account created."]
+    ));
 }

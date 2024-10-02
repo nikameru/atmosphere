@@ -5,19 +5,28 @@ import {
     handleBeatmapChange,
     handleBeatmapLoadComplete,
     handleChatMessage,
+    handleFreeModsSettingChange,
     handleHostChange,
     handleLiveScoreData,
+    handleMaxPlayersChange,
     handlePlayBeatmap,
     handlePlayerKick,
     handlePlayerModsChange,
-    handlePlayerStatusChanged,
+    handlePlayerStatusChange,
     handleRoomConnection,
     handleRoomDisconnection,
-    handleRoomModsChange
+    handleRoomModsChange,
+    handleRoomNameChange,
+    handleRoomPasswordChange,
+    handleScoreSubmission,
+    handleSkipRequest,
+    handleSpeedMultiplierChange,
+    handleTeamChange,
+    handleTeamModeChange,
+    handleWinConditionChange
 } from "./handlers/events/RoomEvents";
 import { Room } from "../structures/Room";
-import { getRoomId } from "../utils/SocketUtils";
-import { RoomServerClientEvents } from "./handlers/events/IRoomEvents";
+import { SocketUtils } from "../utils/SocketUtils";
 
 const roomPool: RoomPool = RoomPool.getInstance();
 
@@ -29,12 +38,23 @@ export function attachListeners(socket: Socket): void {
     registerEventListener(socket, "hostChanged", handleHostChange);
     registerEventListener(socket, "playerKicked", handlePlayerKick);
     registerEventListener(socket, "playerModsChanged", handlePlayerModsChange);
-    registerEventListener(socket, "playerStatusChanged", handlePlayerStatusChanged);
     registerEventListener(socket, "roomModsChanged", handleRoomModsChange);
+    registerEventListener(socket, "speedMultiplierChanged", handleSpeedMultiplierChange);
+    registerEventListener(socket, "freeModsSettingChanged", handleFreeModsSettingChange);
+    registerEventListener(socket, "playerStatusChanged", handlePlayerStatusChange);
+    registerEventListener(socket, "teamModeChanged", handleTeamModeChange);
+    registerEventListener(socket, "winConditionChanged", handleWinConditionChange);
+    registerEventListener(socket, "teamChanged", handleTeamChange);
+    registerEventListener(socket, "roomNameChanged", handleRoomNameChange);
+    registerEventListener(socket, "maxPlayersChanged", handleMaxPlayersChange);
     registerEventListener(socket, "playBeatmap", handlePlayBeatmap);
     registerEventListener(socket, "chatMessage", handleChatMessage);
     registerEventListener(socket, "liveScoreData", handleLiveScoreData);
     registerEventListener(socket, "beatmapLoadComplete", handleBeatmapLoadComplete);
+    registerEventListener(socket, "roomPasswordChanged", handleRoomPasswordChange);
+    registerEventListener(socket, "beatmapLoadComplete", handleBeatmapLoadComplete);
+    registerEventListener(socket, "skipRequested", handleSkipRequest);
+    registerEventListener(socket, "scoreSubmission", handleScoreSubmission);
 }
 
 export function emitToRoom(
@@ -57,7 +77,7 @@ function withRoom(
     handler: (socket: Socket, room: Room, ...args: any[]) => void
 ): (socket: Socket, ...args: any[]) => void {
     return (socket: Socket, ...args: any[]) => {
-        const roomId: number = getRoomId(socket);
+        const roomId: number = SocketUtils.getRoomId(socket);
         const room = roomPool.getRoom(roomId);
 
         if (!room) {
@@ -68,21 +88,3 @@ function withRoom(
         handler(socket, room, ...args);
     };
 }
-
-// export function attachRoomToSocket(socket: Socket, next: (socket: Socket, err?: any) => void) {
-//     console.log(`[attachRoomToSocket] Attaching room to socket...`);
-//     const roomId: number = Number(
-//         socket.nsp.name.slice(socket.nsp.name.lastIndexOf("/") + 1)
-//     );
-//     const room = roomPool.getRoom(roomId);
-
-//     if (!room) {
-//         console.log(`[attachRoomToSocket] Cannot find the room ${roomId}!`);
-//         socket.emit("error", "Cannot find the room.");
-
-//         return next(socket, new Error("Cannot find the room."));
-//     }
-
-//     (socket as any).room = room;
-//     next(socket);
-// }

@@ -1,7 +1,7 @@
 import { Response, Request } from "express";
 import { QueryResult } from "pg";
 import { ResultType } from "../../../../enums/ResultType";
-import { validateParams, getResult } from "../../../../utils/RequestUtils";
+import { RequestUtils } from "../../../../utils/RequestUtils";
 import { query } from "../../../../database/Database";
 
 import { PlayerPool } from "../../../../global/PlayerPool";
@@ -15,21 +15,30 @@ export async function submitScore(req: Request, res: Response) {
 
     // Ensure that all required parameters are present in the request
     if (
-        !validateParams(data, ["userID", "ssid", "hash"]) &&
-        !validateParams(data, ["userID", "playID", "data"])
+        !RequestUtils.validateParams(data, ["userID", "ssid", "hash"])
+        && !RequestUtils.validateParams(data, ["userID", "playID", "data"])
     ) {
-        return res.send(getResult(ResultType.FAIL, ["Not enough arguments."]));
+        return res.send(RequestUtils.createResult(
+            ResultType.FAIL,
+            ["Not enough arguments."]
+        ));
     }
 
     const player = playerPool.getPlayer(Number(data.userID));
     if (player === undefined) {
-        return res.send(getResult(ResultType.FAIL, ["Cannot find player."]));
+        return res.send(RequestUtils.createResult(
+            ResultType.FAIL,
+            ["Cannot find player."]
+        ));
     }
 
     // That means play has only started, so pre-submit is performed
     if (!data.playID) {
         if (data.ssid !== player._uuid) {
-            return res.send(getResult(ResultType.FAIL, ["UUID mismatch."]));
+            return res.send(RequestUtils.createResult(
+                ResultType.FAIL,
+                ["UUID mismatch."]
+            ));
         }
 
         player.playing = data.hash;
@@ -47,7 +56,10 @@ export async function submitScore(req: Request, res: Response) {
         );
         const playId: number = preSubmit.rows[0].id;
 
-        return res.send(getResult(ResultType.SUCCESS, [1, player._id]));
+        return res.send(RequestUtils.createResult(
+            ResultType.SUCCESS,
+            [1, player._id]
+        ));
     }
 
     // Perform regular score submission otherwise
@@ -153,13 +165,14 @@ export async function submitScore(req: Request, res: Response) {
         await player.updateRankAndAccuracy();
     } catch (err) {
         console.log("ERROR while submitting score: " + err + "\n");
-        return res.send(
-            getResult(ResultType.FAIL, ["Score submission failed."])
-        );
+        return res.send(RequestUtils.createResult(
+            ResultType.FAIL,
+            ["Score submission failed."]
+        ));
     }
     console.log(score);
 
-    return res.send(getResult(
+    return res.send(RequestUtils.createResult(
         ResultType.SUCCESS,
         [
             player.rank,

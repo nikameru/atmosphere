@@ -1,20 +1,28 @@
 import { Request, Response } from "express";
 
 import { ResultType } from "../enums/ResultType";
+import axios, { AxiosError, AxiosResponse } from "axios";
 
-export function logRequests(req: Request, res: Response, next: any) {
-    console.log(
-        `[${new Date().toLocaleString()}] ${req.method} => ${req.originalUrl}\n` +
-        `DATA: ${JSON.stringify(req.body)}`
-    );
+export namespace RequestUtils {
 
-    next();
-}
+    export function logRequests(req: Request, res: Response, next: any) {
+        console.log(
+            `[${new Date().toLocaleString()}] ${req.method} => ${req.originalUrl}\n` +
+            `DATA: ${JSON.stringify(req.body)}`
+        );
+        next();
+    }
 
-export function validateParams(data: Record<string, any>, requiredParams: string[]): boolean {
-    return requiredParams.every(param => data[param]) ? true : false;
-}
+    export function validateParams(data: Record<string, any>, requiredParams: string[]): boolean {
+        return requiredParams.every(param => data[param]) ? true : false;
+    }
 
-export function getResult(type: ResultType, data: any[]): string {
-    return type + "\n" + data.map(String).join(" ");
+    export function createResult(type: ResultType, data: any[]): string {
+        return type + "\n" + data.map(String).join(" ");
+    }
+
+    export async function get(url: string, params?: Record<string, any>): Promise<AxiosResponse> {
+        const res: AxiosResponse = await axios.get(url, { params: params });
+        return res;
+    }
 }

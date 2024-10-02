@@ -2,7 +2,7 @@ import Router from "express-promise-router";
 import multer from "multer";
 
 import * as Config from "../global/Config";
-import { logRequests } from "../utils/RequestUtils";
+import { RequestUtils } from "../utils/RequestUtils";
 import { login } from "./handlers/routes/account/Login";
 import { register } from "./handlers/routes/account/Register";
 import { getLeaderboard, getScore } from "./handlers/routes/ranking/Leaderboard";
@@ -25,7 +25,7 @@ export const replayUpload = multer({
 });
 
 // Logging middleware
-api.use(logRequests);
+api.use(RequestUtils.logRequests);
 
 // Login
 api.post("/login.php", login);

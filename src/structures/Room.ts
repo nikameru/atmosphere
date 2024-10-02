@@ -4,6 +4,9 @@ import { TeamMode } from "../enums/TeamMode";
 import { WinCondition } from "../enums/WinCondition";
 import { RoomStatus } from "../enums/RoomStatus";
 import { RoomPlayer } from "./RoomPlayer";
+import { GameplaySettings } from "./GameplaySettings";
+import { Mods } from "./Mods";
+import { Beatmap } from "./Beatmap";
 
 const roomPool: RoomPool = RoomPool.getInstance();
 
@@ -16,9 +19,9 @@ export class Room {
     public isLocked: boolean;
     public maxPlayers: number;
     public players: Map<string, RoomPlayer>;
-    public beatmap: Record<string, string | null> | null;
-    public mods: Record<string, any>;
-    public gameplaySettings: Record<string, any>;
+    public beatmap: Beatmap | null;
+    public mods: Mods;
+    public gameplaySettings: GameplaySettings;
     public teamMode: TeamMode;
     public winCondition: WinCondition;
     public status: RoomStatus;
@@ -30,30 +33,22 @@ export class Room {
         name: string,
         host: RoomPlayer,
         maxPlayers: number,
-        beatmap?: Record<string, string | null>,
+        beatmap?: Beatmap,
         players?: Map<string, RoomPlayer>,
-        mods?: Record<string, any>,
+        mods?: Mods,
         password?: string,
         isLocked?: boolean,
-        gameplaySettings?: Record<string, any>,
+        gameplaySettings?: GameplaySettings,
         teamMode?: TeamMode,
         winCondition?: WinCondition,
         status?: RoomStatus
     ) {
-
         this._id = roomPool.getRooms().size + 1;
 
         this.name = name;
         this.host = host;
         this.maxPlayers = maxPlayers;
-        this.beatmap = beatmap ? {
-            md5: beatmap.md5,
-            title: beatmap.title,
-            artist: beatmap.artist,
-            creator: beatmap.creator,
-            version: beatmap.version,
-            beatmapSetId: beatmap.beatmapSetId ? beatmap.beatmapSetId : null
-        } : null;
+        this.beatmap = beatmap ?? null;
 
         this.password = password ?? null;
         this.isLocked = isLocked ?? this.password ? true : false;

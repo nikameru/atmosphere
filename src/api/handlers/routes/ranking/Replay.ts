@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import { Response, Request } from "express";
 import { ResultType } from "../../../../enums/ResultType";
-import { getResult } from "../../../../utils/RequestUtils";
+import { RequestUtils } from "../../../../utils/RequestUtils";
 import * as Config from "../../../../global/Config";
 
 // Download replay
@@ -11,7 +11,10 @@ export async function downloadReplay(req: Request, res: Response) {
 
     fs.access(replayPath, fs.constants.F_OK, (err) => {
         if (err) {
-            return res.send(getResult(ResultType.FAIL, ["Cannot find replay."]));
+            return res.send(RequestUtils.createResult(
+                ResultType.FAIL, 
+                ["Cannot find replay."]
+            ));
         }
     });
 
@@ -20,5 +23,8 @@ export async function downloadReplay(req: Request, res: Response) {
 
 // Upload replay
 export async function uploadReplay(req: Request, res: Response) {
-    return res.send(getResult(ResultType.SUCCESS, ["Replay uploaded."]));
+    return res.send(RequestUtils.createResult(
+        ResultType.SUCCESS, 
+        ["Replay uploaded."]
+    ));
 }

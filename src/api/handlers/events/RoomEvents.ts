@@ -4,13 +4,16 @@ import * as Config from "../../../global/Config";
 import { Room } from "../../../structures/Room";
 import { RoomPlayer } from "../../../structures/RoomPlayer";
 import { RoomStatus } from "../../../enums/RoomStatus";
-import { io } from "../../..";
+import { io } from "../../../index";
 import { attachListeners } from "../../RoomApi";
 import { PlayerStatus } from "../../../enums/PlayerStatus";
 import { LiveScoreData } from "../../../structures/LiveScoreData";
 import { TeamMode } from "../../../enums/TeamMode";
 import { WinCondition } from "../../../enums/WinCondition";
 import { RoomTeam } from "../../../enums/RoomTeam";
+import { Beatmap } from "../../../structures/Beatmap";
+
+// TODO: organise this mess, remove duplicate code
 
 export async function handleRoomConnection(socket: Socket, room: Room) {
     if (socket.handshake.auth.version < Config.MULTIPLAYER_VERSION) {
@@ -19,7 +22,15 @@ export async function handleRoomConnection(socket: Socket, room: Room) {
              socket.handshake.auth
         );
 
-        return socket.emit("error", "Update the game to use multiplayer features.");
+        /*return*/ socket.emit("error", "Update the game to use multiplayer features.");
+    }
+    
+    // Check password if the room is locked
+    if (room.isLocked) {
+        if (socket.handshake.auth.password !== room.password) {
+            console.log("[handleRoomConnection] Wrong password!", socket.handshake.auth);
+            return socket.emit("error", "Wrong password.");
+        }
     }
 
     const roomPlayer: RoomPlayer = new RoomPlayer(
@@ -31,8 +42,8 @@ export async function handleRoomConnection(socket: Socket, room: Room) {
     room.players.set(socket.id, roomPlayer);
 
     // Session id is unknown at the time of room creation, so it needs to be assigned here
-    if (roomPlayer._id === room.host._id) {
-        console.log("[handleRoomConnection] Assigned host session id in room", room._id, "to", roomPlayer._id);
+    if (roomPlayer.id === room.host.id) {
+        console.log("[handleRoomConnection] Assigned host session id in room", room._id, "to", roomPlayer.id);
         room.host.sessionId = socket.id;
     }
 
@@ -49,8 +60,8 @@ export async function handleRoomConnection(socket: Socket, room: Room) {
         id: room._id,
         name: room.name,
         host: {
-            uid: room.host._id.toString(),
-            username: room.host._username
+            uid: room.host.id.toString(),
+            username: room.host.username
         },
         maxPlayers: room.maxPlayers,
         isLocked: room.isLocked,
@@ -61,8 +72,8 @@ export async function handleRoomConnection(socket: Socket, room: Room) {
         winCondition: room.winCondition,
         players: Array.from(room.players.values()).map(player => {
             return {
-                uid: player._id,
-                username: player._username,
+                uid: player.id,
+                username: player.username,
                 status: player.status,
                 team: player.team,
                 mods: player.mods
@@ -70,10 +81,19 @@ export async function handleRoomConnection(socket: Socket, room: Room) {
         }),
         playerCount: room.players.size,
         playerNames: Array.from(room.players.values())
-            .map(player => player._username)
+            .map(player => player.username)
             .join(", "),
         status: room.status,
         sessionId: socket.id
+    });
+
+    // Notify the room about the new player
+    socket.to(room._id.toString()).emit("playerJoined", {
+        uid: roomPlayer.id.toString(),
+        username: roomPlayer.username,
+        status: roomPlayer.status,
+        team: roomPlayer.team,
+        mods: roomPlayer.mods
     });
 }
 
@@ -90,7 +110,7 @@ export function handleRoomDisconnection(socket: Socket, room: Room) {
         room.destroy();
 
         return console.log("[handleRoomDisconnection] Destroyed room", room._id, "as it is empty.");
-    } else if (player._id === room.host._id) {
+    } else if (player.id === room.host.id) {
         // If the host leaves, new host is picked
         const newHost = Array.from(room.players.values()).at(0);
         if (!newHost) {
@@ -98,22 +118,31 @@ export function handleRoomDisconnection(socket: Socket, room: Room) {
         }
         room.host = newHost;
 
-        console.log("[handleRoomDisconnection] Picked new host in room", room._id, "- uid", newHost._id);
+        console.log("[handleRoomDisconnection] Picked new host in room", room._id, "- uid", newHost.id);
     } else {
         io.of(socket.nsp.name)
             .to(room._id.toString())
-            .emit("playerLeft", player._id.toString());
+            .emit("playerLeft", player.id.toString());
 
-        console.log("[handleRoomDisconnection] Emitted: player", player._id, "left the room", room._id);
+        console.log("[handleRoomDisconnection] Emitted: player", player.id, "left the room", room._id);
     }
 }
 
 
-export function handleBeatmapChange(socket: Socket, room: Room, beatmap: Record<string, any>) {
+export async function handleBeatmapChange(socket: Socket, room: Room, beatmapData: Record<string, any>) {
     if (room.status === RoomStatus.PLAYING) {
         console.log("[handleBeatmapChange] Attempt to change the beatmap while the match isn\'t over in room", room._id);
         return socket.emit("error", "Cannot change the beatmap while somebody is playing.");
     }
+
+    // TODO: Maybe should make a dto for beatmap data or something :p
+    const beatmap: Beatmap = new Beatmap(
+        beatmapData.md5,
+        beatmapData.title,
+        beatmapData.artist,
+        beatmapData.creator,
+        beatmapData.version
+    );
 
     // No beatmap data means the host is in the changing process
     if (!beatmap.md5) {
@@ -128,11 +157,21 @@ export function handleBeatmapChange(socket: Socket, room: Room, beatmap: Record<
     } else {
         // Setting room status back
         room.status = RoomStatus.IDLE;
+
+        // Fetch beatmap set id so the client can download the beatmap
+        await beatmap.fetchBeatmapSetId();
         room.beatmap = beatmap;
 
         io.of(socket.nsp.name)
             .to(room._id.toString())
-            .emit("beatmapChanged", room.beatmap);
+            .emit("beatmapChanged", {
+                md5: beatmap.md5,
+                title: beatmap.title,
+                artist: beatmap.artist,
+                creator: beatmap.creator,
+                version: beatmap.version,
+                beatmapSetId: beatmap.beatmapSetId
+            });
 
         console.log("[handleBeatmapChange] Beatmap changed to", beatmap.md5, "in room", room._id);
     }
@@ -145,7 +184,7 @@ export function handleHostChange(socket: Socket, room: Room, uid: string) {
     }
 
     const newHost = Array.from(room.players.values())
-        .find((player: RoomPlayer) => player._id === Number(uid));
+        .find((player: RoomPlayer) => player.id === Number(uid));
     if (!newHost) {
         console.log("[handleHostChange] Target host not found in room", room._id);
         return socket.emit("error", "Cannot find the player to transfer the host to.");
@@ -154,9 +193,9 @@ export function handleHostChange(socket: Socket, room: Room, uid: string) {
     room.host = newHost;
     io.of(socket.nsp.name)
         .to(room._id.toString())
-        .emit("hostChanged", room.host._id.toString());
+        .emit("hostChanged", room.host.id.toString());
 
-    console.log("[handleHostChange] Host changed to", newHost._id, "in room", room._id);
+    console.log("[handleHostChange] Host changed to", newHost.id, "in room", room._id);
 }
 
 export function handlePlayerKick(socket: Socket, room: Room, uid: string) {
@@ -196,22 +235,20 @@ export function handlePlayerModsChange(socket: Socket, room: Room, mods: string)
         return socket.emit("error", "Cannot find the player to change mods.");
     }
 
-    // TODO: fix and type this messy structure later
     player.mods.mods = mods;
     io.of(socket.nsp.name)
         .to(room._id.toString())
-        .emit("playerModsChanged", player._id.toString(), mods);
+        .emit("playerModsChanged", player.id.toString(), mods);
 
-    console.log(`[handlePlayerModsChange] Changed player ${player._id} mods in room ${room._id}: ${mods}`);
+    console.log(`[handlePlayerModsChange] Changed player ${player.id} mods in room ${room._id}: ${mods}`);
 }
 
 export function handleRoomModsChange(socket: Socket, room: Room, mods: string) {
-    if (room.players.get(socket.id)?._id !== room.host._id) {
+    if (room.players.get(socket.id)?.id !== room.host.id) {
         console.log("[handleRoomModsChange] Attempt to change room mods by a non-host in room", room._id);
         return socket.emit("error", "Only host is allowed to change room mods.");
     }
 
-    // TODO: fix and type this messy structure later
     room.mods.mods = mods;
     io.of(socket.nsp.name)
         .to(room._id.toString())
@@ -221,50 +258,124 @@ export function handleRoomModsChange(socket: Socket, room: Room, mods: string) {
 }
 
 export function handleSpeedMultiplierChange(socket: Socket, room: Room, multiplier: number) {
+    if (room.players.get(socket.id)?.id !== room.host.id) {
+        console.log("[handleSpeedMultiplierChange] Attempt to change room settings by a non-host in room", room._id);
+        return socket.emit("error", "Only host is allowed to change room settings.");
+    }
 
+    room.mods.speedMultiplier = multiplier;
+    io.of(socket.nsp.name)
+        .to(room._id.toString())
+        .emit("speedMultiplierChanged", multiplier);
+
+    console.log("[handleSpeedMultiplierChange] Changed speed multiplier to", multiplier, "in room", room._id);
 }
 
-export function handleFreeModsSettingChange(socket: Socket, room: Room, isEnabled: boolean) {
+export function handleFreeModsSettingChange(socket: Socket, room: Room, isFreeMod: boolean) {
+    if (room.players.get(socket.id)?.id !== room.host.id) {
+        console.log("[handleFreeModsSettingChange] Attempt to change room settings by a non-host in room", room._id);
+        return socket.emit("error", "Only host is allowed to change room settings.");
+    }
 
+    room.gameplaySettings.isFreeMod = isFreeMod;
+    io.of(socket.nsp.name)
+        .to(room._id.toString())
+        .emit("freeModsSettingChanged", isFreeMod);
+
+    console.log("[handleFreeModsSettingChange] Changed free mods to", isFreeMod, "in room", room._id);
 }
 
-export function handlePlayerStatusChanged(socket: Socket, room: Room, status: PlayerStatus) {
+export function handlePlayerStatusChange(socket: Socket, room: Room, status: PlayerStatus) {
     const player = room.players.get(socket.id);
     if (!player) {
-        console.log("[handlePlayerStatusChanged] Player not found in room", room._id);
+        console.log("[handlePlayerStatusChange] Player not found in room", room._id);
         return socket.emit("error", "Cannot find the player to change status.");
     }
 
     player.status = status;
     io.of(socket.nsp.name)
         .to(room._id.toString())
-        .emit("playerStatusChanged", player._id.toString(), status);
+        .emit("playerStatusChanged", player.id.toString(), status);
 
-    console.log(`[handlePlayerStatusChange] Player ${player._id} status changed in room ${room._id} to`, status);
+    console.log(`[handlePlayerStatusChange] Player ${player.id} status changed in room ${room._id} to`, status);
 }
 
-export function handleTeamModeChanged(socket: Socket, room: Room, mode: TeamMode) {
-    
+export function handleTeamModeChange(socket: Socket, room: Room, mode: TeamMode) {
+    if (room.players.get(socket.id)?.id !== room.host.id) {
+        console.log("[handleTeamModeChange] Attempt to change room settings by a non-host in room", room._id);
+        return socket.emit("error", "Only host is allowed to change room settings.");
+    }
+
+    room.teamMode = mode;
+    io.of(socket.nsp.name)
+        .to(room._id.toString())
+        .emit("teamModeChanged", mode);
+
+    console.log("[handleTeamModeChange] Changed team mode to", mode, "in room", room._id);
 }
 
-export function handleWinConditionChanged(socket: Socket, room: Room, condition: WinCondition) {
-    
+export function handleWinConditionChange(socket: Socket, room: Room, condition: WinCondition) {
+    if (room.players.get(socket.id)?.id !== room.host.id) {
+        console.log("[handleWinConditionChange] Attempt to change room settings by a non-host in room", room._id);
+        return socket.emit("error", "Only host is allowed to change room settings.");
+    }
+
+    room.winCondition = condition;
+    io.of(socket.nsp.name)
+        .to(room._id.toString())
+        .emit("winConditionChanged", condition);
+
+    console.log("[handleWinConditionChange] Changed win condition to", condition, "in room", room._id);
 }
 
-export function handleTeamChanged(socket: Socket, room: Room, team: RoomTeam) {
-    
+export function handleTeamChange(socket: Socket, room: Room, team: RoomTeam) {
+    if (room.teamMode !== TeamMode.TEAM_VS_TEAM) {
+        console.log("[handleTeamChange] Attempt to change team in a head-to-head room", room._id);
+        return socket.emit("error", "Cannot change team in a head-to-head room.");
+    }
+
+    const player = room.players.get(socket.id);
+    if (!player) {
+        console.log("[handleTeamChange] Player not found in room", room._id);
+        return socket.emit("error", "Cannot find the player to change team.");
+    }
+
+    player.team = team;
+    io.of(socket.nsp.name)
+        .to(room._id.toString())
+        .emit("teamChanged", player.id.toString(), team);
+
+    console.log("[handleTeamChange] Changed player", player.id, "team in room", room._id);
 }
 
-export function handleRoomNameChanged(socket: Socket, room: Room, name: string) {
-    
+export function handleRoomNameChange(socket: Socket, room: Room, name: string) {
+    if (room.players.get(socket.id)?.id !== room.host.id) {
+        console.log("[handleRoomNameChange] Attempt to change room settings by a non-host in room", room._id);
+        return socket.emit("error", "Only host is allowed to change room settings.");
+    }
+
+    io.of(socket.nsp.name)
+        .to(room._id.toString())
+        .emit("roomNameChanged", name);
+
+    console.log("[handleRoomNameChange] Changed room name to", name, "in room", room._id);
 }
 
-export function handleMaxPlayersChanged(socket: Socket, room: Room, maxPlayers: number) {
-    
+export function handleMaxPlayersChange(socket: Socket, room: Room, maxPlayers: number) {
+    if (room.players.get(socket.id)?.id !== room.host.id) {
+        console.log("[handleMaxPlayersChange] Attempt to change room settings by a non-host in room", room._id);
+        return socket.emit("error", "Only host is allowed to change room settings.");
+    }
+
+    io.of(socket.nsp.name)
+        .to(room._id.toString())
+        .emit("maxPlayersChanged", maxPlayers);
+
+    console.log("[handleMaxPlayersChange] Changed max players to", maxPlayers, "in room", room._id);
 }
 
 export function handlePlayBeatmap(socket: Socket, room: Room) {
-    if (room.players.get(socket.id)?._id !== room.host._id) {
+    if (room.players.get(socket.id)?.id !== room.host.id) {
         console.log("[handlePlayBeatmap] Attempt to start match by a non-host in room", room._id);
         return socket.emit("error", "Only host is allowed to start matches.");
     }
@@ -278,9 +389,11 @@ export function handlePlayBeatmap(socket: Socket, room: Room) {
 
 export function handleChatMessage(socket: Socket, room: Room, message: string) {
     // Chat filtering, message limiting may be implemented here later (if needed)
+    const uid: number | undefined = room.players.get(socket.id)?.id;
+
     io.of(socket.nsp.name)
         .to(room._id.toString())
-        .emit("chatMessage", room.players.get(socket.id)?._username ?? "undefined", message);
+        .emit("chatMessage", uid?.toString() ?? "undefined", message);
 
     console.log(`[handleChatMessage] Sent ${socket.id}\'s message ${message} in room`, room._id);
 }
@@ -291,7 +404,7 @@ export function handleLiveScoreData(socket: Socket, room: Room, data: LiveScoreD
         return socket.emit("error", "No match going on in the room.");
     }
 
-    data.uid = room.players.get(socket.id)?._username ?? "undefined";
+    data.uid = room.players.get(socket.id)?.username ?? "undefined";
 
     // Probably should change to sending everything at once every 3 seconds 
     io.of(socket.nsp.name)
@@ -301,8 +414,17 @@ export function handleLiveScoreData(socket: Socket, room: Room, data: LiveScoreD
     console.log(`[handleLiveScoreData] Sent score data ${data} in room`, room._id);
 }
 
-export function handleRoomPasswordChanged(socket: Socket, room: Room, password: string) {
-    
+export function handleRoomPasswordChange(socket: Socket, room: Room, password?: string) {
+    if (room.players.get(socket.id)?.id !== room.host.id) {
+        console.log("[handleRoomPasswordChange] Attempt to change room settings by a non-host in room", room._id);
+        return socket.emit("error", "Only host is allowed to change room settings.");
+    }
+
+    room.password = password ?? null;
+    // If password is null, the room is unlocked
+    room.isLocked = password ? true : false;
+
+    console.log("[handleRoomPasswordChange] Changed room password to", password, "in room", room._id);
 }
 
 export function handleBeatmapLoadComplete(socket: Socket, room: Room) {
@@ -312,20 +434,25 @@ export function handleBeatmapLoadComplete(socket: Socket, room: Room) {
         return socket.emit("error", "Cannot find the player.");
     }
 
-    console.log(`[handleBeatmapLoadComplete] ${player._id} has loaded beatmap in room`, room._id);
+    console.log(`[handleBeatmapLoadComplete] ${player.id} has loaded beatmap in room`, room._id);
 
     room.addLoadedPlayer(player);
     // If every client has loaded the beatmap, emit match start
     if (room.hasEveryoneLoaded()) {
+        room.status = RoomStatus.PLAYING;
+
         io.of(socket.nsp.name)
             .to(room._id.toString())
             .emit("allPlayersBeatmapLoadComplete");
+        io.of(socket.nsp.name)
+            .to(room._id.toString())
+            .emit("roomStatusChanged", room.status);
 
         console.log(`[handleBeatmapLoadComplete] Emitted gameplay start in room`, room._id);
     }
 }
 
-export function handleSkipRequested(socket: Socket, room: Room) {
+export function handleSkipRequest(socket: Socket, room: Room) {
     
 }
 

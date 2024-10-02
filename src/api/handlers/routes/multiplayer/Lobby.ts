@@ -1,6 +1,6 @@
 import { Response, Request } from "express";
 import { ResultType } from "../../../../enums/ResultType";
-import { validateParams, getResult } from "../../../../utils/RequestUtils";
+import { RequestUtils } from "../../../../utils/RequestUtils";
 
 import { RoomPool } from "../../../../global/RoomPool";
 import { Room } from "../../../../structures/Room";
@@ -28,8 +28,8 @@ export async function getRooms(req: Request, res: Response) {
             winCondition: room.winCondition,
             players: Array(...room.players.values()).map(player => {
                 return {
-                    uid: player._id,
-                    username: player._username,
+                    uid: player.id,
+                    username: player.username,
                     status: player.status,
                     team: player.team,
                     mods: player.mods
@@ -37,7 +37,7 @@ export async function getRooms(req: Request, res: Response) {
             }),
             playerCount: room.players.size,
             playerNames: Array(...room.players.values())
-                .map(player => player._username)
+                .map(player => player.username)
                 .join(", "),
             status: room.status
         });
@@ -51,22 +51,22 @@ export async function createRoom(req: Request, res: Response) {
     const data: Record<string, any> = req.body;
 
     // Ensure that all required parameters are present in the request
-    if (!validateParams(
-        data,
-        ["name", "maxPlayers", "host"]
-    )) {
-        return res.send(getResult(ResultType.FAIL, ["Not enough arguments."]));
-    } else if (!validateParams(data.host, ["uid", "username"])) {
-        return res.send(getResult(
+    if (!RequestUtils.validateParams(data, ["name", "maxPlayers", "host"])) {
+        return res.send(RequestUtils.createResult(
+            ResultType.FAIL,
+            ["Not enough arguments."]
+        ));
+    } else if (!RequestUtils.validateParams(data.host, ["uid", "username"])) {
+        return res.send(RequestUtils.createResult(
             ResultType.FAIL,
             ["Not enough arguments in the host field"])
         );
     } else if (data.beatmap) {
-        if (!validateParams(
+        if (!RequestUtils.validateParams(
             data.beatmap, 
             ["md5", "title", "artist", "creator", "version"]
         )) {
-            return res.send(getResult(
+            return res.send(RequestUtils.createResult(
                 ResultType.FAIL,
                 ["Not enough arguments in the beatmap field"]
             ));
