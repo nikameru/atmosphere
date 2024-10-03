@@ -19,7 +19,7 @@ export class PlayerPool {
     public add(player: Player): void {
         console.log(player);
         
-        this.players.set(player._id, player);
+        this.players.set(player.id, player);
     }
 
     public delete(id: number): void {

@@ -32,6 +32,7 @@ const roomPool: RoomPool = RoomPool.getInstance();
 
 export const onRoomConnection: Function = withRoom(handleRoomConnection);
 
+// Called upon connection
 export function attachListeners(socket: Socket): void {
     registerEventListener(socket, "disconnect", handleRoomDisconnection);
     registerEventListener(socket, "beatmapChanged", handleBeatmapChange);

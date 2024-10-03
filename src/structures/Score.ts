@@ -7,39 +7,30 @@ import { PlayerPool } from "../global/PlayerPool";
 
 export class Score {
 
-    // Score data
-    public id: number;
+    private _id: number;
 
-    // TODO: Beatmap class?
-    public readonly _beatmapHash: string;
-    public readonly _player: Player | null;
-    public readonly _timestamp: number;
-    public readonly _deviceId: string;
+    private readonly _beatmapHash: string;
+    private readonly _player: Player | null;
+    private readonly _timestamp: number;
+    private readonly _deviceId: string;
 
-    // Score statistics
-    public rank: number;
+    private _rank: number;
 
-    // TODO: Mod[]?
-    public readonly _mods: string;
-    // TODO: DPP?
-    public readonly _score: number;
-    public readonly _maxCombo: number;
-    public readonly _fullCombo: boolean;
-    // TODO: Grade enum?
-    public readonly _grade: string;
-    public readonly _accuracy: number;
+    private readonly _mods: string;
+    private readonly _score: number;
+    private readonly _maxCombo: number;
+    private readonly _fullCombo: boolean;
+    private readonly _grade: string;
+    private readonly _accuracy: number;
+    private readonly _hit300: number;
+    private readonly _hitGeki: number;
+    private readonly _hit100: number;
+    private readonly _hitKatsu: number;
+    private readonly _hit50: number;
+    private readonly _hitMiss: number;
 
-    // Score hit statistics
-    public readonly _hit300: number;
-    public readonly _hitGeki: number;
-    public readonly _hit100: number;
-    public readonly _hitKatsu: number;
-    public readonly _hit50: number;
-    public readonly _hitMiss: number;
-    
-    // Score status
-    public status: ScoreStatus;
-    public previousBest: Score | null;
+    private _status: ScoreStatus;
+    private _previousBest: Score | null;
 
     public constructor(
         id?: number,
@@ -64,14 +55,14 @@ export class Score {
         previousBest?: Score,
     
     ) {
-        this.id = id ?? -1;
+        this._id = id ?? -1;
 
         this._beatmapHash = beatmapHash ?? "";
         this._player = player ?? null;
         this._timestamp = timestamp ?? 0;
         this._deviceId = deviceId ?? "";
 
-        this.rank = rank ?? 0;
+        this._rank = rank ?? 0;
 
         this._mods = mods ?? "";
         this._score = score ?? 0;
@@ -87,8 +78,104 @@ export class Score {
         this._hit50 = hit50 ?? 0;
         this._hitMiss = hitMiss ?? 0;
 
-        this.status = status ?? ScoreStatus.NONE;
-        this.previousBest = previousBest ?? null;
+        this._status = status ?? ScoreStatus.NONE;
+        this._previousBest = previousBest ?? null;
+    }
+
+    public get id(): number {
+        return this._id;
+    }
+
+    public set id(value: number) {
+        this._id = value;
+    }
+
+    public get beatmapHash(): string {
+        return this._beatmapHash;
+    }
+
+    public get player(): Player | null {
+        return this._player;
+    }
+
+    public get timestamp(): number {
+        return this._timestamp;
+    }
+
+    public get deviceId(): string {
+        return this._deviceId;
+    }
+
+    public get rank(): number {
+        return this._rank;
+    }
+
+    public set rank(value: number) {
+        this._rank = value;
+    }
+
+    public get mods(): string {
+        return this._mods;
+    }
+
+    public get score(): number {
+        return this._score;
+    }
+
+    public get maxCombo(): number {
+        return this._maxCombo;
+    }
+
+    public get fullCombo(): boolean {
+        return this._fullCombo;
+    }
+
+    public get grade(): string {
+        return this._grade;
+    }
+
+    public get accuracy(): number {
+        return this._accuracy;
+    }
+
+    public get hit300(): number {
+        return this._hit300;
+    }
+
+    public get hitGeki(): number {
+        return this._hitGeki;
+    }
+
+    public get hit100(): number {
+        return this._hit100;
+    }
+
+    public get hitKatsu(): number {
+        return this._hitKatsu;
+    }
+
+    public get hit50(): number {
+        return this._hit50;
+    }
+
+    public get hitMiss(): number {
+        return this._hitMiss;
+    }
+
+    public get status(): ScoreStatus {
+        return this._status;
+    }
+
+    public set status(value: ScoreStatus) {
+        this._status = value;
+    }
+
+    public get previousBest(): Score | null {
+        return this._previousBest;
+    }
+
+    public set previousBest(value: Score) {
+        this._previousBest = value;
     }
 
     public static async fromDatabase(id: number): Promise<Score> {
@@ -179,7 +266,7 @@ export class Score {
             WHERE player_id = $1 AND beatmap_hash = $2
             ORDER BY score DESC
             `,
-            [this._player?._id, this._player?.playing]
+            [this._player?.id, this._player?.playing]
         );
         console.log(prevScores.rows);
     

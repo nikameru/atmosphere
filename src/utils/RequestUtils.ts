@@ -8,7 +8,7 @@ export namespace RequestUtils {
     export function logRequests(req: Request, res: Response, next: any) {
         console.log(
             `[${new Date().toLocaleString()}] ${req.method} => ${req.originalUrl}\n` +
-            `DATA: ${JSON.stringify(req.body)}`
+            `DATA: ${JSON.stringify(req.body)}\n`
         );
         next();
     }

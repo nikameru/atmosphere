@@ -4,6 +4,7 @@ import { RoomTeam } from "../../../enums/RoomTeam";
 import { TeamMode } from "../../../enums/TeamMode";
 import { WinCondition } from "../../../enums/WinCondition";
 import { LiveScoreData } from "../../../structures/LiveScoreData";
+import { ScoreSubmission } from "../../../structures/ScoreSubmussion";
 
 export interface RoomServerClientEvents {
     initialConnection: (roomInfo: Record<string, any>) => void;
@@ -25,10 +26,10 @@ export interface RoomServerClientEvents {
     playBeatmap: () => void;
     chatMessage: (username: string, message: string) => void;
     liveScoreData: (data: LiveScoreData[]) => void;
-    roomStatusChanged: (status: RoomStatus) => void;                // TODO: Implement
+    roomStatusChanged: (status: RoomStatus) => void;
     allPlayersBeatmapLoadComplete: () => void;
-    allPlayersSkipRequested: () => void;                            // TODO: Implement
-    allPlayersScoreSubmitted: () => void;                           // TODO: Implement
+    allPlayersSkipRequested: () => void;
+    allPlayersScoreSubmitted: (scores: ScoreSubmission[]) => void;
 }
 
 export interface RoomClientServerEvents {
@@ -51,5 +52,5 @@ export interface RoomClientServerEvents {
     roomPasswordChanged: (password?: string) => void;
     beatmapLoadComplete: () => void;
     skipRequested: () => void;
-    scoreSubmission: () => void;
+    scoreSubmission: (score: ScoreSubmission) => void;
 }

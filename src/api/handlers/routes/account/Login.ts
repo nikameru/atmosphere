@@ -93,7 +93,7 @@ export async function login(req: Request, res: Response) {
     return res.send(RequestUtils.createResult(
         ResultType.SUCCESS,
         [
-            player._id,
+            player.id,
             uuid,
             player.rank,
             player.totalScore,

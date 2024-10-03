@@ -2,18 +2,21 @@ import { QueryResult } from "pg";
 
 import { query } from "../database/Database";
 import { ScoreStatus } from "../enums/ScoreStatus";
+import { Room } from "./Room";
 
 export class Player {
 
-    public readonly _id: number;
-    public readonly _uuid: string;
-    public username: string;
-    public rank: number;
-    public totalScore: number;
-    public rankedScore: number;
-    public accuracy: number;
-    public playcount: number;
-    public playing: string;
+    private _id: number;
+    private _uuid: string;
+    private _username: string;
+    private _rank: number;
+    private _totalScore: number;
+    private _rankedScore: number;
+    private _accuracy: number;
+    private _playcount: number;
+    private _playing: string;
+    private _isInMultiplayerRoom: boolean = false;
+    private _multiplayerRoom: Room | null = null;
 
     public constructor(
         id: number,
@@ -28,13 +31,93 @@ export class Player {
     ) {
         this._id = id;
         this._uuid = uuid;
-        this.username = username;
-        this.rank = rank;
-        this.totalScore = totalScore;
-        this.rankedScore = rankedScore;
-        this.accuracy = accuracy;
-        this.playcount = playcount;
-        this.playing = playing;
+        this._username = username;
+        this._rank = rank;
+        this._totalScore = totalScore;
+        this._rankedScore = rankedScore;
+        this._accuracy = accuracy;
+        this._playcount = playcount;
+        this._playing = playing;
+    }
+
+    public get id(): number {
+        return this._id;
+    }
+
+    public get uuid(): string {
+        return this._uuid;
+    }
+
+    public get username(): string {
+        return this._username;
+    }
+
+    public set username(value: string) {
+        this._username = value;
+    }
+
+    public get rank(): number {
+        return this._rank;
+    }
+
+    public set rank(value: number) {
+        this._rank = value;
+    }
+
+    public get totalScore(): number {
+        return this._totalScore;
+    }
+
+    public set totalScore(value: number) {
+        this._totalScore = value;
+    }
+
+    public get rankedScore(): number {
+        return this._rankedScore;
+    }
+
+    public set rankedScore(value: number) {
+        this._rankedScore = value;
+    }
+
+    public get accuracy(): number {
+        return this._accuracy;
+    }
+
+    public set accuracy(value: number) {
+        this._accuracy = value;
+    }
+
+    public get playcount(): number {
+        return this._playcount;
+    }
+
+    public set playcount(value: number) {
+        this._playcount = value;
+    }
+
+    public get playing(): string {
+        return this._playing;
+    }
+
+    public set playing(value: string) {
+        this._playing = value;
+    }
+
+    public get isInMultiplayerRoom(): boolean {
+        return this._isInMultiplayerRoom;
+    }
+
+    public set isInMultiplayerRoom(value: boolean) {
+        this._isInMultiplayerRoom = value;
+    }
+
+    public get multiplayerRoom(): Room | null {
+        return this._multiplayerRoom;
+    }
+
+    public set multiplayerRoom(value: Room | null) {
+        this._multiplayerRoom = value;
     }
 
     // TODO: Implement methods analogous to the ones in Score.ts

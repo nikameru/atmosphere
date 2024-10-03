@@ -34,7 +34,7 @@ export async function submitScore(req: Request, res: Response) {
 
     // That means play has only started, so pre-submit is performed
     if (!data.playID) {
-        if (data.ssid !== player._uuid) {
+        if (data.ssid !== player.uuid) {
             return res.send(RequestUtils.createResult(
                 ResultType.FAIL,
                 ["UUID mismatch."]
@@ -52,13 +52,13 @@ export async function submitScore(req: Request, res: Response) {
             VALUES ($1, $2, $3)
             RETURNING id
             `,
-            [player._id, data.hash, ScoreStatus.PRESUBMITTED]
+            [player.id, data.hash, ScoreStatus.PRESUBMITTED]
         );
         const playId: number = preSubmit.rows[0].id;
 
         return res.send(RequestUtils.createResult(
             ResultType.SUCCESS,
-            [1, player._id]
+            [playId, player.id]
         ));
     }
 
@@ -77,17 +77,17 @@ export async function submitScore(req: Request, res: Response) {
                 `,
                 [
                     ScoreStatus.SUBMITTED,
-                    score._beatmapHash,
+                    score.beatmapHash,
                     ScoreStatus.BEST,
-                    score._player?._id
+                    score.player?.id
                 ]
             );
 
             // Add score points to the player statistics
-            var diff: number = score._score;
+            var diff: number = score.score;
             // If there was a previous best score, subtract it from the reward
             if (score.previousBest) {
-                diff -= score.previousBest._score;
+                diff -= score.previousBest.score;
             }
             // TODO: check if the beatmap should give ranked score, etc.
             player.totalScore += diff;
@@ -122,24 +122,24 @@ export async function submitScore(req: Request, res: Response) {
             RETURNING id
             `,
             [
-                score._timestamp,
-                score._deviceId,
+                score.timestamp,
+                score.deviceId,
                 score.rank,
-                score._mods,
-                score._score,
-                score._maxCombo,
-                score._fullCombo,
-                score._grade,
-                score._accuracy,
-                score._hit300,
-                score._hitGeki,
-                score._hit100,
-                score._hitKatsu,
-                score._hit50,
-                score._hitMiss,
+                score.mods,
+                score.score,
+                score.maxCombo,
+                score.fullCombo,
+                score.grade,
+                score.accuracy,
+                score.hit300,
+                score.hitGeki,
+                score.hit100,
+                score.hitKatsu,
+                score.hit50,
+                score.hitMiss,
                 score.status,
-                player._id,
-                score._beatmapHash,
+                player.id,
+                score.beatmapHash,
                 ScoreStatus.PRESUBMITTED
             ]
         );
@@ -158,7 +158,7 @@ export async function submitScore(req: Request, res: Response) {
                 player.totalScore,
                 player.rankedScore,
                 player.playcount,
-                player._id
+                player.id
             ]
         );
 

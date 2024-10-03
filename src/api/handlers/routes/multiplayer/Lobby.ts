@@ -17,7 +17,7 @@ export async function getRooms(req: Request, res: Response) {
 
     for (const room of roomPool.getRooms().values()) {
         rooms.push({
-            id: room._id,
+            id: room.id,
             name: room.name,
             isLocked: room.isLocked,
             maxPlayers: room.maxPlayers,
@@ -88,5 +88,5 @@ export async function createRoom(req: Request, res: Response) {
     );
     roomPool.add(room);
 
-    return res.send({ id: room._id });
+    return res.send({ id: room.id });
 }

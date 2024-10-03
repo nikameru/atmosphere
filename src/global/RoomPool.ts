@@ -20,7 +20,7 @@ export class RoomPool {
     public add(room: Room): void {
         console.log(room);
 
-        this.rooms.set(room._id, room);
+        this.rooms.set(room.id, room);
     }
 
     public delete(id: number): void {

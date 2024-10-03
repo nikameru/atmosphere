@@ -79,17 +79,17 @@ export async function getScore(req: Request, res: Response) {
     return res.send(RequestUtils.createResult(
         ResultType.SUCCESS,
         [
-            score._mods,
-            score._score,
-            score._maxCombo,
-            score._grade,
-            score._hitGeki,
-            score._hit300,
-            score._hitKatsu,
-            score._hit100,
-            score._hit50,
-            score._hitMiss,
-            Math.round(score._accuracy * 1000)
+            score.mods,
+            score.score,
+            score.maxCombo,
+            score.grade,
+            score.hitGeki,
+            score.hit300,
+            score.hitKatsu,
+            score.hit100,
+            score.hit50,
+            score.hitMiss,
+            Math.round(score.accuracy * 1000)
         ]
     ));
 }
