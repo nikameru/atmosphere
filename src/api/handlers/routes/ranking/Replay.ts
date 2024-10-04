@@ -5,7 +5,6 @@ import { RequestUtils } from "../../../../utils/RequestUtils";
 import * as Config from "../../../../global/Config";
 import multer from "multer";
 
-// TODO: Fix replays
 const replayStorage = multer.diskStorage({
     destination: Config.DATA_PATH + "/replays",
     filename: function (req, file, callback) {
