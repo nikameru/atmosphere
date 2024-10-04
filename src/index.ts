@@ -23,7 +23,7 @@ const io = new Server<
     PlayerClientServerEvents & RoomClientServerEvents,
     PlayerServerClientEvents & RoomServerClientEvents
 >(server);
-const port: string | number = process.env.ATMOSPHERE_PORT || Config.DEFAULT_PORT;
+const port: string | number = process.env.PORT || Config.DEFAULT_PORT;
 
 // To broadcast events to certain rooms
 export { io };
