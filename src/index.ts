@@ -7,6 +7,10 @@ import "dotenv/config";
 import * as Config from "./global/Config";
 import { api } from "./api/Api";
 import * as db from "./database/Database";
+import {
+    PlayerServerClientEvents,
+    PlayerClientServerEvents
+} from "./api/handlers/events/IPlayerEvents"; 
 import { 
     RoomServerClientEvents,
     RoomClientServerEvents
@@ -16,8 +20,8 @@ import { onRoomConnection } from "./api/RoomApi";
 const app = express();
 const server = http.createServer(app);
 const io = new Server<
-    RoomClientServerEvents,
-    RoomServerClientEvents
+    PlayerClientServerEvents & RoomClientServerEvents,
+    PlayerServerClientEvents & RoomServerClientEvents
 >(server);
 const port: string | number = process.env.ATMOSPHERE_PORT || Config.DEFAULT_PORT;
 

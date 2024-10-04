@@ -57,6 +57,7 @@ export class Beatmap {
     // Fetches the beatmap set ID from the osu!direct API (setter, basically)
     public async fetchBeatmapSetId() {
         const res = await RequestUtils.get(`${Config.OSU_DIRECT_ENDPOINT}md5/${this._md5}`);
+        
         this._beatmapSetId = res.data.beatmapset_id;
     }
 }

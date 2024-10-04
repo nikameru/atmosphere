@@ -12,6 +12,8 @@
     "author": "",
     "license": "MIT",
     "dependencies": {
+        "@rian8337/osu-base": "^3.3.0",
+        "@rian8337/osu-difficulty-calculator": "^3.3.2",
         "axios": "^1.7.7",
         "bcryptjs": "^2.4.3",
         "dotenv": "^16.4.5",

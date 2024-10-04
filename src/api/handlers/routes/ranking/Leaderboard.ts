@@ -24,7 +24,7 @@ export async function getLeaderboard(req: Request, res: Response) {
 
     const scores: QueryResult = await query(
         `
-        SELECT *
+        SELECT scores.id AS score_id, scores.*, users.*
         FROM scores
         JOIN users
         ON scores.player_id = users.id
@@ -35,16 +35,16 @@ export async function getLeaderboard(req: Request, res: Response) {
         [data.hash, ScoreStatus.BEST]
     );
     // Tranform query result into a string array with the needed format
-    const leaderboardData: string[] = scores.rows.map(entry =>
+    const leaderboardData: string[] = scores.rows.map(score =>
         [
-            entry.id,
-            entry.username,
-            entry.score,
-            entry.max_combo,
-            entry.grade,
-            entry.mods,
-            Math.round(entry.accuracy * 1000),
-            entry.email_hash
+            score.score_id,
+            score.username,
+            score.score,
+            score.max_combo,
+            score.grade,
+            score.mods,
+            Math.round(score.accuracy * 1000),
+            score.email_hash
         ].join(" ")
     );
 

@@ -33,7 +33,7 @@ export async function initialize(): Promise<void> {
             stars REAL,
             md5 TEXT
         );
-
+        
         CREATE TABLE IF NOT EXISTS scores (
             id SERIAL PRIMARY KEY,
             status INTEGER NOT NULL,

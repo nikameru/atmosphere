@@ -232,7 +232,7 @@ export class Score {
 
         const score: Score = new Score(
             undefined,
-            player.playing,
+            player.playing ?? undefined,
             player,
             Math.round(Number(data[11]) / 1000),
             undefined,

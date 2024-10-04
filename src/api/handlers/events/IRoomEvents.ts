@@ -7,14 +7,8 @@ import { LiveScoreData } from "../../../structures/LiveScoreData";
 import { ScoreSubmission } from "../../../structures/ScoreSubmussion";
 
 export interface RoomServerClientEvents {
-    initialConnection: (roomInfo: Record<string, any>) => void;
     beatmapChanged: (beatmap: Record<string, any> | null) => void;
     hostChanged: (uid: string) => void;
-    playerKicked: (uid: string) => void;
-    playerJoined: (player: Record<string, any>) => void;
-    playerLeft: (uid: string) => void;
-    playerModsChanged: (uid: string, mods: string) => void;
-    playerStatusChanged: (uid: string, status: PlayerStatus) => void;
     roomModsChanged: (mods: string) => void;
     speedMultiplierChanged: (speedMultiplier: number) => void;
     freeModsSettingChanged: (isFreeMod: boolean) => void;
@@ -33,11 +27,7 @@ export interface RoomServerClientEvents {
 }
 
 export interface RoomClientServerEvents {
-    disconnect: () => void;
     beatmapChanged: (beatmap?: Record<string, any>) => void;
-    playerKicked: (uid: string) => void;
-    playerModsChanged: (uid: string, mods: string) => void;
-    playerStatusChanged: (status: PlayerStatus) => void;
     roomModsChanged: (mods: string) => void;
     speedMultiplierChanged: (speedMultiplier: number) => void;
     freeModsSettingChanged: (isFreeMod: boolean) => void;

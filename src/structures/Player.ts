@@ -14,7 +14,7 @@ export class Player {
     private _rankedScore: number;
     private _accuracy: number;
     private _playcount: number;
-    private _playing: string;
+    private _playing: string | null;
     private _isInMultiplayerRoom: boolean = false;
     private _multiplayerRoom: Room | null = null;
 
@@ -27,7 +27,7 @@ export class Player {
         rankedScore: number,
         accuracy: number,
         playcount: number,
-        playing: string = ""
+        playing?: string | null
     ) {
         this._id = id;
         this._uuid = uuid;
@@ -37,7 +37,7 @@ export class Player {
         this._rankedScore = rankedScore;
         this._accuracy = accuracy;
         this._playcount = playcount;
-        this._playing = playing;
+        this._playing = playing ?? null;
     }
 
     public get id(): number {
@@ -96,11 +96,11 @@ export class Player {
         this._playcount = value;
     }
 
-    public get playing(): string {
+    public get playing(): string | null {
         return this._playing;
     }
 
-    public set playing(value: string) {
+    public set playing(value: string | null) {
         this._playing = value;
     }
 

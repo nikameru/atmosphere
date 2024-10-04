@@ -32,8 +32,9 @@ export async function submitScore(req: Request, res: Response) {
         ));
     }
 
-    // That means play has only started, so pre-submit is performed
+    // That means play has only started, so a pre-submit is performed
     if (!data.playID) {
+        // Uuid should be checked only on pre-submit
         if (data.ssid !== player.uuid) {
             return res.send(RequestUtils.createResult(
                 ResultType.FAIL,
@@ -44,8 +45,7 @@ export async function submitScore(req: Request, res: Response) {
         player.playing = data.hash;
 
         // Perform pre-submit
-        // TODO: check for previous pre-submits and stuff
-        const preSubmit: QueryResult = await query(
+        /*const preSubmit: QueryResult = */await query(
             `
             INSERT INTO scores
             (player_id, beatmap_hash, status)
@@ -54,11 +54,11 @@ export async function submitScore(req: Request, res: Response) {
             `,
             [player.id, data.hash, ScoreStatus.PRESUBMITTED]
         );
-        const playId: number = preSubmit.rows[0].id;
+        //const playId: number = preSubmit.rows[0].id;
 
         return res.send(RequestUtils.createResult(
             ResultType.SUCCESS,
-            [playId, player.id]
+            [1, player.id]
         ));
     }
 
@@ -95,7 +95,7 @@ export async function submitScore(req: Request, res: Response) {
         }
 
         // Update other player statistics
-        player.playing = "";
+        player.playing = null;
         player.playcount++;
 
         // Update the score after dealing with the previous best (if present)
@@ -118,7 +118,13 @@ export async function submitScore(req: Request, res: Response) {
                 hit50 = $14,
                 hit_miss = $15,
                 status = $16
-            WHERE player_id = $17 AND beatmap_hash = $18 AND status = $19
+            WHERE id = (
+                SELECT id
+                FROM scores
+                WHERE player_id = $17 AND beatmap_hash = $18 AND status = $19
+                ORDER BY id DESC
+                LIMIT 1
+            )
             RETURNING id
             `,
             [
@@ -164,7 +170,7 @@ export async function submitScore(req: Request, res: Response) {
 
         await player.updateRankAndAccuracy();
     } catch (err) {
-        console.log("ERROR while submitting score: " + err + "\n");
+        console.log("Error while submitting score: " + err + "\n");
         return res.send(RequestUtils.createResult(
             ResultType.FAIL,
             ["Score submission failed."]

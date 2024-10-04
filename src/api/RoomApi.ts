@@ -1,7 +1,15 @@
 import { Server, Socket } from "socket.io";
 
 import { RoomPool } from "../global/RoomPool";
-import { 
+import {
+    handlePlayerConnection,
+    handlePlayerDisconnection,
+    handlePlayerKick,
+    handlePlayerModsChange,
+    handlePlayerStatusChange,
+    handlePlayerTeamChange
+} from "./handlers/events/PlayerEvents";
+import {
     handleBeatmapChange,
     handleBeatmapLoadComplete,
     handleChatMessage,
@@ -10,18 +18,12 @@ import {
     handleLiveScoreData,
     handleMaxPlayersChange,
     handlePlayBeatmap,
-    handlePlayerKick,
-    handlePlayerModsChange,
-    handlePlayerStatusChange,
-    handleRoomConnection,
-    handleRoomDisconnection,
     handleRoomModsChange,
     handleRoomNameChange,
     handleRoomPasswordChange,
     handleScoreSubmission,
     handleSkipRequest,
     handleSpeedMultiplierChange,
-    handleTeamChange,
     handleTeamModeChange,
     handleWinConditionChange
 } from "./handlers/events/RoomEvents";
@@ -30,11 +32,11 @@ import { SocketUtils } from "../utils/SocketUtils";
 
 const roomPool: RoomPool = RoomPool.getInstance();
 
-export const onRoomConnection: Function = withRoom(handleRoomConnection);
+export const onRoomConnection: Function = withRoom(handlePlayerConnection);
 
 // Called upon connection
 export function attachListeners(socket: Socket): void {
-    registerEventListener(socket, "disconnect", handleRoomDisconnection);
+    registerEventListener(socket, "disconnect", handlePlayerDisconnection);
     registerEventListener(socket, "beatmapChanged", handleBeatmapChange);
     registerEventListener(socket, "hostChanged", handleHostChange);
     registerEventListener(socket, "playerKicked", handlePlayerKick);
@@ -45,7 +47,7 @@ export function attachListeners(socket: Socket): void {
     registerEventListener(socket, "playerStatusChanged", handlePlayerStatusChange);
     registerEventListener(socket, "teamModeChanged", handleTeamModeChange);
     registerEventListener(socket, "winConditionChanged", handleWinConditionChange);
-    registerEventListener(socket, "teamChanged", handleTeamChange);
+    registerEventListener(socket, "teamChanged", handlePlayerTeamChange);
     registerEventListener(socket, "roomNameChanged", handleRoomNameChange);
     registerEventListener(socket, "maxPlayersChanged", handleMaxPlayersChange);
     registerEventListener(socket, "playBeatmap", handlePlayBeatmap);
