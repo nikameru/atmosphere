@@ -3,10 +3,10 @@ import pg, { QueryResult } from "pg";
 const { Pool } = pg;
 
 const pool = new Pool({
-    user: process.env.POSTGRES_USER,
-    password: process.env.POSTGRES_PASSWORD,
-    port: 5432,
-    database: "atmospheredb"
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
 export async function initialize(): Promise<void> {
