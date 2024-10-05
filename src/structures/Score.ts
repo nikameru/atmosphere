@@ -224,9 +224,8 @@ export class Score {
     public static async fromSubmission(submission: Record<string, string>): Promise<Score> {
         const data: string[] = submission.data.split(" ");
 
-        const player: Player | undefined = PlayerPool.getInstance()
-            .getPlayer(Number(submission.userID));
-        if (player === undefined) {
+        const player = PlayerPool.getInstance().getPlayer(Number(submission.userID));
+        if (!player) {
             throw new Error("Cannot find player.");
         }
 
@@ -263,17 +262,16 @@ export class Score {
             `
             SELECT id, score
             FROM scores
-            WHERE player_id = $1 AND beatmap_hash = $2
-            ORDER BY score DESC
+            WHERE player_id = $1 AND beatmap_hash = $2 AND status = $3
             `,
-            [this._player?.id, this._player?.playing]
+            [this.player?.id, this.player?.playing, ScoreStatus.BEST]
         );
         console.log(prevScores.rows);
     
         // If the score is first on the beatmap, it is the best one
         if (prevScores.rows.length < 1) {
             this.status = ScoreStatus.BEST;
-        } else if (this._score > prevScores.rows[0].score) {
+        } else if (this.score > prevScores.rows[0].score) {
             // Set the previous best score in case there was one
             this.previousBest = await Score.fromDatabase(prevScores.rows[0].id);
             this.status = ScoreStatus.BEST;
@@ -291,7 +289,7 @@ export class Score {
             FROM scores
             WHERE beatmap_hash = $1 AND score > $2 AND status = $3
             `,
-            [this._beatmapHash, this._score, ScoreStatus.BEST]
+            [this.beatmapHash, this.score, ScoreStatus.BEST]
         );
         
         // Update beatmap rank, don't forget to add 1 to the amount of players

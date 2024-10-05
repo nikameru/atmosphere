@@ -84,14 +84,14 @@ export async function submitScore(req: Request, res: Response) {
             );
 
             // Add score points to the player statistics
-            var diff: number = score.score;
+            var rewardPoints: number = score.score;
             // If there was a previous best score, subtract it from the reward
             if (score.previousBest) {
-                diff -= score.previousBest.score;
+                rewardPoints -= score.previousBest.score;
             }
             // TODO: check if the beatmap should give ranked score, etc.
-            player.totalScore += diff;
-            player.rankedScore += diff;
+            player.totalScore += rewardPoints;
+            player.rankedScore += rewardPoints;
         }
 
         // Update other player statistics
