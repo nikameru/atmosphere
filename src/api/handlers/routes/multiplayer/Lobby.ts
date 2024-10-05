@@ -4,15 +4,12 @@ import { RequestUtils } from "../../../../utils/RequestUtils";
 
 import { RoomPool } from "../../../../global/RoomPool";
 import { Room } from "../../../../structures/Room";
-import { RoomStatus } from "../../../../enums/RoomStatus";
 import { RoomPlayer } from "../../../../structures/RoomPlayer";
 
 const roomPool: RoomPool = RoomPool.getInstance();
 
 // Retrieve a list of multiplayer rooms
 export async function getRooms(req: Request, res: Response) {
-    const data: Record<string, string> = req.body;
-
     const rooms: Record<string, any>[] = [];
 
     for (const room of roomPool.getRooms().values()) {

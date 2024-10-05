@@ -4,11 +4,8 @@ import { ResultType } from "../../../../enums/ResultType";
 import { RequestUtils } from "../../../../utils/RequestUtils";
 import { query } from "../../../../database/Database";
 
-import { PlayerPool } from "../../../../global/PlayerPool";
 import { Score } from "../../../../structures/Score";
 import { ScoreStatus } from "../../../../enums/ScoreStatus";
-
-const playerPool: PlayerPool = PlayerPool.getInstance();
 
 // Get top scores for a beatmap (leaderboard)
 export async function getLeaderboard(req: Request, res: Response) {
@@ -66,10 +63,12 @@ export async function getScore(req: Request, res: Response) {
         ));
     }
 
-    var score: Score;
+    let score: Score;
     try {
         score = await Score.fromDatabase(Number(data.playID));
     } catch (err) {
+        console.log("[getScore] Error while retrieving score:", err);
+
         return res.send(RequestUtils.createResult(
             ResultType.FAIL,
             ["Cannot find score."]

@@ -1,4 +1,3 @@
-import { Player } from "./Player";
 import { RoomPool } from "../global/RoomPool";
 import { TeamMode } from "../enums/TeamMode";
 import { WinCondition } from "../enums/WinCondition";
@@ -28,7 +27,7 @@ export class Room {
     private _status: RoomStatus;
     private _playersLoaded: Set<RoomPlayer> = new Set<RoomPlayer>();
     private _playersSkipped: Set<RoomPlayer> = new Set<RoomPlayer>();
-    private _submittedScores: ScoreSubmission[] = new Array();
+    private _submittedScores: ScoreSubmission[] = [];
 
     public constructor(
         name: string,

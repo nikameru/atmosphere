@@ -63,7 +63,7 @@ export async function submitScore(req: Request, res: Response) {
     }
 
     // Perform regular score submission otherwise
-    var score: Score;
+    let score: Score;
     try {
         score = await Score.fromSubmission(data);
 
@@ -84,7 +84,7 @@ export async function submitScore(req: Request, res: Response) {
             );
 
             // Add score points to the player statistics
-            var rewardPoints: number = score.score;
+            let rewardPoints: number = score.score;
             // If there was a previous best score, subtract it from the reward
             if (score.previousBest) {
                 rewardPoints -= score.previousBest.score;

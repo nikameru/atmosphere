@@ -1,4 +1,3 @@
-import { PlayerStatus } from "../../../enums/PlayerStatus";
 import { RoomStatus } from "../../../enums/RoomStatus";
 import { RoomTeam } from "../../../enums/RoomTeam";
 import { TeamMode } from "../../../enums/TeamMode";
@@ -7,7 +6,7 @@ import { LiveScoreData } from "../../../structures/LiveScoreData";
 import { ScoreSubmission } from "../../../structures/ScoreSubmussion";
 
 export interface RoomServerClientEvents {
-    beatmapChanged: (beatmap: Record<string, any> | null) => void;
+    beatmapChanged: (beatmap: Record<string, string> | null) => void;
     hostChanged: (uid: string) => void;
     roomModsChanged: (mods: string) => void;
     speedMultiplierChanged: (speedMultiplier: number) => void;
