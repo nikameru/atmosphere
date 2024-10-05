@@ -1,8 +1,6 @@
-import { Player } from '../structures/Player';
 import { Room } from '../structures/Room';
 
 // Pool of active multiplayer rooms
-// Should make it a regular map?
 export class RoomPool {
     private static instance: RoomPool;
     private rooms: Map<number, Room> = new Map<number, Room>();

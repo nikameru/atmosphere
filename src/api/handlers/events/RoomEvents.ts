@@ -1,22 +1,18 @@
 import { Socket } from "socket.io";
 
-import * as Config from "../../../global/Config";
 import { Room } from "../../../structures/Room";
 import { RoomPlayer } from "../../../structures/RoomPlayer";
 import { RoomStatus } from "../../../enums/RoomStatus";
 import { io } from "../../../index";
-import { attachListeners } from "../../RoomApi";
-import { PlayerStatus } from "../../../enums/PlayerStatus";
 import { LiveScoreData } from "../../../structures/LiveScoreData";
 import { TeamMode } from "../../../enums/TeamMode";
 import { WinCondition } from "../../../enums/WinCondition";
-import { RoomTeam } from "../../../enums/RoomTeam";
 import { Beatmap } from "../../../structures/Beatmap";
 import { ScoreSubmission } from "../../../structures/ScoreSubmussion";
 
 export async function handleBeatmapChange(socket: Socket, room: Room, beatmapData: Record<string, any>) {
     if (room.status === RoomStatus.PLAYING) {
-        console.log("[handleBeatmapChange] Attempt to change the beatmap while the match isn\'t over in room", room.id);
+        console.log("[handleBeatmapChange] Attempt to change the beatmap while the match isn't over in room", room.id);
         return socket.emit("error", "Cannot change the beatmap while somebody is playing.");
     }
 
@@ -135,7 +131,7 @@ export function handleTeamModeChange(socket: Socket, room: Room, mode: TeamMode)
 
     room.teamMode = mode;
     if (mode === TeamMode.HEAD_TO_HEAD) {
-        for (let player of room.players.values()) {
+        for (const player of room.players.values()) {
             player.team = null;
         }
     }
@@ -209,12 +205,12 @@ export function handleChatMessage(socket: Socket, room: Room, message: string) {
         .to(room.id.toString())
         .emit("chatMessage", uid?.toString() ?? "undefined", message);
 
-    console.log(`[handleChatMessage] Sent ${socket.id}\'s message ${message} in room`, room.id);
+    console.log(`[handleChatMessage] Sent ${socket.id}'s message ${message} in room`, room.id);
 }
 
 export function handleLiveScoreData(socket: Socket, room: Room, data: LiveScoreData) {
     if (room.status !== RoomStatus.PLAYING) {
-        console.log("[handleLiveScoreData] Room", room.id, "isn\'t in the playing state");
+        console.log("[handleLiveScoreData] Room", room.id, "isn't in the playing state");
         return socket.emit("error", "No match going on in the room.");
     }
 

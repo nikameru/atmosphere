@@ -15,19 +15,27 @@ api.use(RequestUtils.logRequests);
 
 // Login
 api.post("/login.php", login);
+
 // Register a new account
 api.post("/register.php", register);
+
 // Get top scores for a beatmap (leaderboard)
 api.post("/getrank.php", getLeaderboard);
+
 // Get score data by id
 api.post("/gettop.php", getScore);
+
 // Download replay
 api.get("/upload/:replay", downloadReplay);
+
 // Upload replay
 api.post("/upload.php", replayUpload.single("uploadedfile"), uploadReplay);
+
 // Submit score
 api.post("/submit.php", submitScore);
+
 // Get a list of multiplayer rooms
 api.get("/getrooms", getRooms);
+
 // Create a multiplayer room
 api.post("/createroom", createRoom);

@@ -32,7 +32,7 @@ import { SocketUtils } from "../utils/SocketUtils";
 
 const roomPool: RoomPool = RoomPool.getInstance();
 
-export const onRoomConnection: Function = withRoom(handlePlayerConnection);
+export const onRoomConnection = withRoom(handlePlayerConnection);
 
 // Called upon connection
 export function attachListeners(socket: Socket): void {

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 
 import { ResultType } from "../enums/ResultType";
-import axios, { AxiosError, AxiosResponse } from "axios";
+import axios, { AxiosResponse } from "axios";
 
 export namespace RequestUtils {
 
