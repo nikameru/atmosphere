@@ -54,10 +54,14 @@ export class Beatmap {
         return this._beatmapSetId;
     }
 
+    public set beatmapSetId(id: string) {
+        this._beatmapSetId = id;
+    }
+
     // Fetches the beatmap set ID from the osu!direct API (setter, basically)
     public async fetchBeatmapSetId() {
-        const res = await RequestUtils.get(`${Config.OSU_DIRECT_ENDPOINT}md5/${this._md5}`);
+        const res = await RequestUtils.get(`${Config.OSU_DIRECT_ENDPOINT}md5/${this.md5}`);
         
-        this._beatmapSetId = res.data.beatmapset_id;
+        this.beatmapSetId = res.data.beatmapset_id;
     }
 }

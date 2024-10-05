@@ -184,7 +184,7 @@ export class Player {
             SET rank = $1, accuracy = $2
             WHERE id = $3
             `,
-            [this.rank, this.accuracy, this._id]
+            [this.rank, this.accuracy, this.id]
         );
     }
 

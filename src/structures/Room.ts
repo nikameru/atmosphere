@@ -182,26 +182,26 @@ export class Room {
     }
 
     public hasEveryoneLoaded(): boolean {
-        return this._playersLoaded.size === this._players.size;
+        return this.playersLoaded.size === this._players.size;
     }
 
     public hasEveryoneSkipped(): boolean {
-        return this._playersSkipped.size === this._players.size;
+        return this.playersSkipped.size === this._players.size;
     }
 
     public hasEveryoneSubmitted(): boolean {
-        return this._submittedScores.length === this.players.size;
+        return this.submittedScores.length === this.players.size;
     }
 
     // Used upon match end
     public reset(): void {
-        this._playersLoaded.clear();
-        this._playersSkipped.clear();
-        this._submittedScores.length = 0;
+        this.playersLoaded.clear();
+        this.playersSkipped.clear();
+        this.submittedScores.length = 0;
     }
 
     public destroy(): void {
-        roomPool.delete(this._id);
+        roomPool.delete(this.id);
     }
 
 }
