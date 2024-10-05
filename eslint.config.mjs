@@ -7,9 +7,6 @@ export default tseslint.config(
 	eslint.configs.recommended,
 	...tseslint.configs.recommended,
 	{
-		files: [
-			"src/**/*.ts"
-		],
 		ignores: [
 			"dist",
 			"build",
