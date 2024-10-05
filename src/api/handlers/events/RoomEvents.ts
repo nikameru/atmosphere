@@ -10,7 +10,7 @@ import { WinCondition } from "../../../enums/WinCondition";
 import { Beatmap } from "../../../structures/Beatmap";
 import { ScoreSubmission } from "../../../structures/ScoreSubmussion";
 
-export async function handleBeatmapChange(socket: Socket, room: Room, beatmapData: Record<string, string>) {
+export async function handleBeatmapChange(socket: Socket, room: Room, beatmapData: Record<string, any>) {
     if (room.status === RoomStatus.PLAYING) {
         console.log("[handleBeatmapChange] Attempt to change the beatmap while the match isn't over in room", room.id);
         return socket.emit("error", "Cannot change the beatmap while somebody is playing.");

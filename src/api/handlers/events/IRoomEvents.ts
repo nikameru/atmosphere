@@ -6,7 +6,7 @@ import { LiveScoreData } from "../../../structures/LiveScoreData";
 import { ScoreSubmission } from "../../../structures/ScoreSubmussion";
 
 export interface RoomServerClientEvents {
-    beatmapChanged: (beatmap: Record<string, string> | null) => void;
+    beatmapChanged: (beatmap: Record<string, any> | null) => void;
     hostChanged: (uid: string) => void;
     roomModsChanged: (mods: string) => void;
     speedMultiplierChanged: (speedMultiplier: number) => void;
